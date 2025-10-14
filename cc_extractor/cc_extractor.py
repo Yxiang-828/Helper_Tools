@@ -128,7 +128,7 @@ class CCExtractor:
 
         # Set output directory
         if output_dir is None:
-            output_dir = video_path.parent / "extracted_captions"
+            output_dir = Path(__file__).parent / "extracted_captions"
         else:
             output_dir = Path(output_dir)
 
@@ -170,6 +170,47 @@ class CCExtractor:
 
         return extracted_files
 
+    def extract_audio(self, video_path, output_dir=None):
+        """Extract audio from video file as MP3"""
+        if not self.ffmpeg_path:
+            raise RuntimeError("FFmpeg not found. Please install FFmpeg and add it to your PATH.")
+
+        video_path = Path(video_path)
+        if not video_path.exists():
+            raise FileNotFoundError(f"Video file not found: {video_path}")
+
+        # Set output directory
+        if output_dir is None:
+            output_dir = Path(__file__).parent / "extracted_audio"
+        else:
+            output_dir = Path(output_dir)
+
+        output_dir.mkdir(exist_ok=True)
+
+        # Generate output filename
+        base_name = video_path.stem
+        output_path = output_dir / f"{base_name}.mp3"
+
+        cmd = [
+            self.ffmpeg_path, "-i", str(video_path),
+            "-vn",  # No video
+            "-acodec", "libmp3lame",  # MP3 codec
+            "-q:a", "2",  # Quality (0-9, 2 is good)
+            str(output_path)
+        ]
+
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)  # Longer timeout for audio extraction
+            if result.returncode == 0:
+                print(f"✅ Audio extracted: {output_path.name}")
+                return str(output_path)
+            else:
+                print(f"❌ Failed to extract audio: {result.stderr}")
+                return None
+        except subprocess.TimeoutExpired:
+            print("❌ Timeout while extracting audio")
+            return None
+
 def main():
     print("🎬 Closed Caption Extractor for MP4/MOV Videos")
     print("=" * 50)
@@ -196,12 +237,19 @@ def main():
 
         extracted_files = extractor.extract_all_subtitles(video_path, output_dir)
 
+        # Always extract audio as MP3
+        print(f"\n🎵 Extracting audio from: {Path(video_path).name}")
+        audio_file = extractor.extract_audio(video_path, output_dir)
+
         if extracted_files:
             print(f"\n✅ Extraction complete! {len(extracted_files)} subtitle file(s) created:")
             for file in extracted_files:
                 print(f"  📄 {file}")
         else:
             print("\n❌ No subtitles were extracted")
+
+        if audio_file:
+            print(f"  🎵 {audio_file}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
