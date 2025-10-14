@@ -5,6 +5,7 @@ extracted_gifs/
 complete_ui_extraction/
 extracted_audio/
 extracted_captions/
+output_*/
 __pycache__/
 *.bundle
 *.log

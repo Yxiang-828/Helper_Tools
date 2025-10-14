@@ -23,6 +23,7 @@
 
 ## Output Management
 - **Default Output Path**: Use `Path(__file__).parent / "output_folder"` to ensure outputs go to the helper's directory
+- **Naming Convention**: Name all output folders starting with "output_" (e.g., `output_audio/`, `output_gifs/`) to automatically ignore them via .gitignore pattern
 - **User-Specified Output**: Allow optional command-line argument for custom output directory
 - **File Naming**: Descriptive names with timestamps if needed (e.g., `video_name.mp3`)
 - **Cleanup**: No automatic cleanup unless specified
