@@ -3,6 +3,8 @@ extracted_assets/
 new_extractions/
 extracted_gifs/
 complete_ui_extraction/
+extracted_audio/
+extracted_captions/
 __pycache__/
 *.bundle
 *.log
