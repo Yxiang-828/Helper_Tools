@@ -31,7 +31,7 @@ if "%~1"=="" (
     exit /b 1
 )
 
-py cc_extractor\cc_extractor.py %*
+py "Video-subtitle&mp3-extractor/cc_extractor.py" %*
 
 echo.
 echo ===============================================

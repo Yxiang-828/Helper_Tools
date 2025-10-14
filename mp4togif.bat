@@ -15,7 +15,7 @@ echo Press any key to start...
 pause > nul
 
 cd /d "%~dp0"
-py ./"mp4 to gif converter"/converter.py
+py ./"Video_to_GIF_Converter"/converter.py
 
 echo.
 echo Conversion complete! Press any key to exit...

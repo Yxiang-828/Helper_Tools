@@ -1,4 +1,4 @@
-# Closed Caption Extractor
+# Video Subtitle & MP3 Extractor
 
 Extract embedded subtitle/closed caption tracks from MP4 and MOV video files.
 
@@ -90,8 +90,12 @@ The extractor uses FFmpeg to:
 ## File Structure
 
 ```
-cc_extractor/
+Video-subtitle&mp3-extractor/
 ├── cc_extractor.py      # Main extraction script
 ├── extract_cc.bat       # Windows batch file
 └── README.md           # This documentation
 ```
+
+## Credits
+
+- **FFmpeg**: Used for video processing and subtitle extraction (https://ffmpeg.org/)
