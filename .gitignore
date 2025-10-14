@@ -1,0 +1,11 @@
+# Output folders and files from helper tools
+extracted_assets/
+new_extractions/
+extracted_gifs/
+complete_ui_extraction/
+__pycache__/
+*.bundle
+*.log
+*.tmp
+*.temp
+*.png
