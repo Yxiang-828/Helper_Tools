@@ -110,22 +110,22 @@ graph TD
     A[User Input Image] --> B{Choose Method}
     B --> C[Real-ESRGAN GPU]
     B --> D[EDSR CPU]
-    
+
     C --> C1[Vulkan Acceleration]
     C1 --> C2[GAN Processing]
     C2 --> C3[4x Upscaling]
     C3 --> E[Output Enhanced Image]
-    
+
     D --> D1[TensorFlow Model]
     D1 --> D2[CNN Processing]
     D2 --> D3[Sharp Detail Enhancement]
     D3 --> E
-    
+
     F[AI Model Integration] --> G[OpenCV DNN]
     G --> H[Automatic Fallback]
     H --> I[Classical CV Methods]
     I --> E
-    
+
     style C fill:#ff6b6b
     style D fill:#4ecdc4
     style E fill:#45b7d1

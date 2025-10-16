@@ -1,51 +1,49 @@
 # Video to GIF Converter
 
-**Transform MP4 videos into perfectly optimized GIFs with precise size and speed control - no more bloated animations!**
+Convert MP4 videos to optimized GIFs with exact size and speed constraints.
 
-Convert videos to shareable GIFs while maintaining exact file size limits and playback speed. Uses intelligent algorithms to automatically optimize resolution and frame rate for your constraints.
-
-## ⚡ Key Features
-
-- 🎯 **Constraint-Based Optimization**: Set exact file size and speed limits
-- 🧠 **Smart Analysis**: Automatically analyzes video properties and calculates optimal settings
-- ⚡ **Lightning Fast**: Processes videos in seconds with intelligent algorithms
-- 📊 **Detailed Reporting**: Shows optimization results and constraint compliance
-- � **Dual Interface**: Interactive prompts or command-line automation
-- 🎨 **Quality Preservation**: Maintains visual quality within your limits
-
-## Quick Start
+## Usage
 
 ```bash
-# Install dependencies (one-time)
-pip install moviepy pillow
-
-# Interactive mode (recommended)
+# Interactive mode
 advanced_converter.bat
 
-# Command line with constraints
-python converter.py "video.mp4" -s 5 -p 0.8 -o "output.gif"
+# Command line
+python converter.py "video.mp4" -s 5 -p 1.0 -o "output.gif"
 ```
 
-## Installation
+## Parameters
 
-### Basic Setup
-```bash
-pip install moviepy pillow
-```
+| Parameter | Description | Range | Example |
+|-----------|-------------|-------|---------|
+| `-s, --size` | Max file size (MB) | 1-50 | `-s 10` |
+| `-p, --speed` | Playback speed ratio | 0.1-2.0 | `-p 0.5` |
+| `-o, --output` | Output path | Optional | `-o result.gif` |
 
-**No additional setup required!** 🎉
+## How It Works
 
-## Usage Examples
+1. **Analysis**: Examines video properties (duration, resolution, frame rate)
+2. **Optimization**: Automatically scales resolution/frame rate to meet constraints
+3. **Validation**: Ensures output meets exact specifications
 
-### Interactive Mode (Easiest)
-```cmd
-REM Run the converter
-advanced_converter.bat
+## Performance
 
-REM Follow the prompts:
-REM 1. Enter video path: C:\Videos\demo.mp4
-REM 2. Enter size limit: 8 (MB)
-REM 3. Enter speed ratio: 1.0 (1.0 = original speed)
+- **Processing**: 10-60 seconds per video
+- **File Sizes**: 1-50MB (recommended for web)
+- **Speed Ratios**: 0.1x (slow) to 2.0x (fast)
+- **Auto-scaling**: Resolution reduced to meet size limits
+
+## Supported Formats
+
+- **Input**: MP4, AVI, MOV, MKV, WebM
+- **Output**: GIF (web-optimized)
+- **Codecs**: H.264, H.265, VP8, VP9
+
+## Requirements
+
+- **Python**: 3.7+
+- **Dependencies**: `pip install moviepy pillow`
+- **Memory**: 4GB+ recommended for large videos
 ```
 
 ### Command Line Mode

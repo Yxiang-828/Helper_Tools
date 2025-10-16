@@ -15,7 +15,7 @@ ffmpeg_path = r"C:\ffmpeg\bin"
 if ffmpeg_path not in os.environ['PATH']:
     os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ['PATH']
 
-def audio_to_text(audio_path, model_size="base", output_dir=None):
+def audio_to_text(audio_path, model_size="base", output_dir=None, language="en"):
     """
     Convert audio file to text using Whisper.
 
@@ -41,12 +41,22 @@ def audio_to_text(audio_path, model_size="base", output_dir=None):
 
     # Transcribe audio
     print(f"Transcribing: {audio_path.name}")
-    result = model.transcribe(str(audio_path))
+    if language == "auto":
+        result = model.transcribe(str(audio_path))
+    else:
+        result = model.transcribe(str(audio_path), language=language)
 
     # Save transcript
-    transcript_path = output_dir / f"{audio_path.stem}_transcript.txt"
+    transcript_path = output_dir / f"{audio_path.stem}_transcript.md"
     with open(transcript_path, 'w', encoding='utf-8') as f:
-        f.write(result["text"])
+        f.write(f"# Audio Transcript: {audio_path.name}\n\n")
+        f.write(f"**File:** {audio_path.name}\n")
+        f.write(f"**Model:** {model_size}\n")
+        f.write(f"**Language:** {language}\n")
+        f.write(f"**Generated:** {Path(__file__).parent.stem} tool\n\n")
+        f.write("## Transcript\n\n")
+        f.write(str(result["text"]))
+        f.write("\n")
 
     print(f"Transcript saved to: {transcript_path}")
     return str(transcript_path)
@@ -58,11 +68,14 @@ def main():
                        choices=["tiny", "base", "small", "medium", "large"],
                        help="Whisper model size (default: base)")
     parser.add_argument("--output-dir", help="Output directory for transcripts")
+    parser.add_argument("--language", default="en",
+                       choices=["en", "zh", "ja", "es", "fr", "de", "ko", "auto"],
+                       help="Language for transcription (default: en, use 'auto' for detection)")
 
     args = parser.parse_args()
 
     try:
-        transcript_path = audio_to_text(args.audio_file, args.model, args.output_dir)
+        transcript_path = audio_to_text(args.audio_file, args.model, args.output_dir, args.language)
         print(f"Success! Transcript: {transcript_path}")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
