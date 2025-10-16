@@ -31,22 +31,20 @@ Enhances the resolution of images and videos using AI-powered super resolution a
 
 ## Usage
 
-### Simple Batch File (Recommended)
+### Easy Mode (Recommended for beginners)
+1. **Drag & Drop**: Simply drag any image or video file onto `enhance_media.bat`
+2. **Interactive Menu**: Double-click `enhance_media.bat` and follow the on-screen prompts
+3. **Automatic Enhancement**: Uses AI with 2x scaling by default
+
+### Advanced Mode (For power users)
+Use `enhance_media_advanced.bat` with command line parameters:
 ```cmd
-enhance_media.bat "path\to\image.jpg"
-enhance_media.bat "path\to\video.mp4"
+enhance_media_advanced.bat "input_file" --scale 4 --method ai --output "custom_output.jpg"
 ```
 
-### With Custom Scale and Method
-```cmd
-enhance_media.bat "image.png" --scale 4 --method ai
-enhance_media.bat "video.mov" --scale 2 --method classical
-```
-
-### Command Line
-```bash
-py media_enhancer.py "input_file" --scale 2 --method ai --output "output_file"
-```
+### Batch File Options
+- **enhance_media.bat**: User-friendly interactive interface
+- **enhance_media_advanced.bat**: Command-line interface for scripts and automation
 
 ## Supported Formats
 
