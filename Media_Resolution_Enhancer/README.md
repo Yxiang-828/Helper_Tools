@@ -35,19 +35,16 @@ Enhances the resolution of images and videos using AI-powered super resolution a
 Just drag and drop any image or video file onto `enhance_media.bat`, or run:
 ```cmd
 enhance_media.bat "path\to\your\file.jpg"
+enhance_media.bat "path\to\your\file.jpg" 4
 ```
 
-**That's it!** Uses AI enhancement with 2x scaling automatically.
-
-### Advanced Usage
-For custom settings, use `enhance_media_advanced.bat`:
-```cmd
-enhance_media_advanced.bat "input_file" --scale 4 --method ai --output "custom_output.jpg"
-```
+**Optional scale parameter**: Add a number (2, 3, or 4) for different scaling levels. Defaults to 2x if not specified.
 
 ### What It Does
 - **Input**: Any supported media file (images or videos)
 - **Processing**: AI-powered super resolution (EDSR neural networks)
+- **Output**: Enhanced file saved to `enhanced_media/` folder
+- **Original**: Never modified
 - **Output**: Enhanced file saved to `enhanced_media/` folder
 - **Original**: Never modified
 
