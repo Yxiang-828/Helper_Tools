@@ -19,12 +19,15 @@ if "%~1"=="" (
     exit /b 1
 )
 
-REM Set input file
-set INPUT_FILE=%~1
+REM Set input file - handle paths with parentheses and spaces
+set "INPUT_FILE=%~1"
+
+REM Remove quotes if present
+if defined INPUT_FILE set "INPUT_FILE=%INPUT_FILE:"=%"
 
 REM Check if file exists
 if not exist "%INPUT_FILE%" (
-    echo ERROR: File not found: %INPUT_FILE%
+    echo ERROR: File not found: "%INPUT_FILE%"
     echo.
     pause
     exit /b 1
