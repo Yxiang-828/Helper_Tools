@@ -1,4 +1,4 @@
-# Professional Audio to Text Transcriber
+# Audio to Text Converter
 
 Converts audio files (MP3, WAV, etc.) to text transcripts using OpenAI Whisper.
 
@@ -16,14 +16,22 @@ Converts audio files (MP3, WAV, etc.) to text transcripts using OpenAI Whisper.
 
 ## Usage
 
-### Simple Batch File (Recommended)
-```cmd
-mp3-to-txt.bat "path\to\audio_file.mp3"
-```
-
 ### Command Line
 ```bash
-py audio_to_text.py "path/to/audio.mp3"
+# Basic usage
+py audio_to_text/audio_to_text.py path/to/audio.mp3
+
+# Specify model size (larger = more accurate but slower)
+py audio_to_text/audio_to_text.py path/to/audio.mp3 --model small
+
+# Custom output directory
+py audio_to_text/audio_to_text.py path/to/audio.mp3 --output-dir /path/to/output
+```
+
+### Batch File (Windows)
+```cmd
+audio_to_text.bat "path\to\audio.mp3"
+audio_to_text.bat "path\to\audio.mp3" --model small
 ```
 
 ## Model Options
@@ -53,8 +61,3 @@ Transcripts are saved as `.txt` files in `output_transcripts/` directory with th
 - Supports various audio formats (MP3, WAV, M4A, etc.)
 - Works offline once model is downloaded
 - Processing time depends on audio length and model size (e.g., 30 seconds ~10-30 seconds on CPU)
-
-## Credits
-
-- **OpenAI Whisper**: Advanced speech recognition model (https://github.com/openai/whisper)
-- **PyTorch**: Deep learning framework used by Whisper (https://pytorch.org/)

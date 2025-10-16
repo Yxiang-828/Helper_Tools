@@ -1,75 +1,109 @@
 @echo off
-REM Image Upscaler - Simple Version
-REM Usage: image_upscaler.bat "input_file"
-
 setlocal enabledelayedexpansion
 
+REM AMD GPU Image Upscaler - Interactive Mode
+REM Usage: image_upscaler.bat "input_file"
+
 if "%~1"=="" (
+    echo ========================================
+    echo      AMD GPU Image Upscaler
+    echo ========================================
+    echo.
     echo ERROR: No input file specified!
     echo.
-    echo Usage: image_upscaler.bat "path\to\media_file"
+    echo Usage: image_upscaler.bat "path\to\image_file"
     echo.
-    echo Example: image_upscaler.bat "C:\Photos\image.jpg"
+    echo Then choose method and scale interactively.
     echo.
     pause
     exit /b 1
 )
 
-set "input_file=%~1"
+REM Set input file
+set INPUT_FILE=%~1
 
 REM Check if file exists
-if not exist "!input_file!" (
-    echo ERROR: File not found: !input_file!
+if not exist "%INPUT_FILE%" (
+    echo ERROR: File not found: %INPUT_FILE%
     echo.
     pause
     exit /b 1
 )
 
 echo ========================================
-echo       Image Upscaler
+echo      AMD GPU Image Upscaler
 echo ========================================
-echo.
-echo File: !input_file!
+echo Input: %INPUT_FILE%
 echo.
 
-REM Ask for scale
-echo Choose scale factor:
-echo 2. 2x (recommended)
-echo 3. 3x
-echo 4. 4x (high quality)
+REM Choose method
+echo Choose upscaling method:
+echo 1. Real-ESRGAN Vulkan (GPU - fast, good quality)
+echo 2. EDSR OpenCV (CPU - slower, sharper)
 echo.
-set /p scale_choice="Enter scale (2-4) or press Enter for 2x: "
+set /p METHOD_CHOICE="Enter 1 or 2: "
 
-if "!scale_choice!"=="2" (
-    set "scale=2"
-) else if "!scale_choice!"=="3" (
-    set "scale=3"
-) else if "!scale_choice!"=="4" (
-    set "scale=4"
+if "%METHOD_CHOICE%"=="1" (
+    set METHOD=realesrgan
+) else if "%METHOD_CHOICE%"=="2" (
+    set METHOD=edsr
 ) else (
-    set "scale=2"
+    echo Invalid choice. Defaulting to Real-ESRGAN.
+    set METHOD=realesrgan
 )
 
+REM Choose scale
 echo.
-echo Processing with !scale!x scale using AI enhancement...
+echo Choose scale factor (2, 3, or 4):
+set /p SCALE="Enter scale (default 4): "
+if "%SCALE%"=="" set SCALE=4
+
+echo.
+echo Method: %METHOD%
+echo Scale: %SCALE%x
+echo Processing...
 echo.
 
-py "%~dp0image_upscaler\media_enhancer.py" "!input_file!" --scale !scale! --method ai
+REM Get full path
+for %%F in ("%INPUT_FILE%") do (
+    set FILENAME=%%~nF
+    set FILEEXT=%%~xF
+)
 
-if !errorlevel! equ 0 (
+REM Output path
+set OUTPUT_DIR=%~dp0image_upscaler\output
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
+set WIN_OUTPUT=%OUTPUT_DIR%\%FILENAME%_%METHOD%_x%SCALE%%FILEEXT%
+echo.
+
+if /i "%METHOD%"=="realesrgan" (
+    echo Running Real-ESRGAN Vulkan...
+    "%~dp0image_upscaler\realesrgan-windows\realesrgan-ncnn-vulkan.exe" -i "%INPUT_FILE%" -o "%WIN_OUTPUT%" -s %SCALE% -v
+) else if /i "%METHOD%"=="edsr" (
+    echo Running EDSR OpenCV on Windows...
+    py "%~dp0image_upscaler\opencv_edsr.py" "%INPUT_FILE%" --scale %SCALE% --output "%WIN_OUTPUT%"
+) else (
+    echo ERROR: Invalid method: %METHOD%
+    echo Use --method realesrgan or --method edsr
+    pause
+    exit /b 1
+)
+
+if %errorlevel% equ 0 (
     echo.
     echo ========================================
     echo           SUCCESS!
     echo ========================================
-    echo.
-    echo Enhanced file saved to: image_upscaler\output\
+    echo Output: "%WIN_OUTPUT%"
     echo.
 ) else (
     echo.
-    echo ERROR: Enhancement failed.
+    echo ========================================
+    echo           ERROR!
+    echo ========================================
+    echo Check error messages above.
     echo.
 )
 
-echo Press any key to exit...
-pause >nul
+pause
 endlocal

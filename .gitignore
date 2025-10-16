@@ -1,17 +1,42 @@
-# Output folders and files from helper tools
-extracted_assets/
-new_extractions/
-extracted_gifs/
-complete_ui_extraction/
-extracted_audio/
-extracted_captions/
-enhanced_media/
-output/
-temp_frames/
-output_*/
-__pycache__/
-*.bundle
-*.log
+# Output folders
+image_upscaler/output/
+Audio_to_Text_Transcriber/output_transcripts/
+S&B_Extractor/complete_ui_extraction/
+S&B_Extractor/extracted_assets/
+S&B_Extractor/new_extractions/
+Video_to_GIF_Converter/extracted_gifs/
+Video_to_GIF_Converter/__pycache__/
+Video-subtitle&mp3-extractor/extracted_audio/
+Video-subtitle&mp3-extractor/extracted_captions/
+
+# Temp files
 *.tmp
-*.temp
+*.log
+*.bundle
 *.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.webm
+*.flv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

@@ -1,4 +1,4 @@
-# Professional Video to GIF Converter
+# Advanced MP4 to GIF Converter
 
 A sophisticated Python tool that converts MP4 videos to optimized GIFs with custom size and speed constraints.
 
@@ -134,9 +134,3 @@ After conversion, you'll see:
 ## License
 
 This tool is provided as-is for personal and educational use.
-
-## Credits
-
-- **MoviePy**: Python library for video editing and processing (https://zulko.github.io/moviepy/)
-- **FFmpeg**: Used by MoviePy for video processing (https://ffmpeg.org/)
-- **Pillow (PIL)**: Python Imaging Library for image processing (https://python-pillow.org/)

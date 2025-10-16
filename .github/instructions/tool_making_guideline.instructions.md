@@ -23,14 +23,12 @@
 
 ## Output Management
 - **Default Output Path**: Use `Path(__file__).parent / "output_folder"` to ensure outputs go to the helper's directory
-- **Naming Convention**: Name all output folders starting with "output_" (e.g., `output_audio/`, `output_gifs/`) to automatically ignore them via .gitignore pattern
 - **User-Specified Output**: Allow optional command-line argument for custom output directory
 - **File Naming**: Descriptive names with timestamps if needed (e.g., `video_name.mp3`)
 - **Cleanup**: No automatic cleanup unless specified
 
 ## Git and Version Control
 - **.gitignore**: Include patterns for all output folders, temp files (*.tmp, *.log, *.bundle, *.png), __pycache__/
-- **New Tools**: When developing new tools, immediately add .gitignore patterns for their output folders before generating any outputs
 - **Commits**: Commit scripts and configs, not outputs
 - **README**: Update with usage, dependencies, examples
 
