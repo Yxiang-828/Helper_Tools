@@ -33,19 +33,19 @@ Enhances the resolution of images using AI-powered super resolution and advanced
 
 ### Simple Usage (Recommended)
 ```cmd
-enhance_media.bat "path\to\your\file.jpg"
+image_upscaler.bat "path\to\your\file.jpg"
 ```
 
 **What happens:**
 1. Run the command with your file path
 2. Choose scale factor when prompted (2x, 3x, or 4x)
 3. Wait for AI processing to complete
-4. Find enhanced file in `enhanced_media\` folder
+4. Find enhanced file in `output\` folder (named `originalname_up.ext`)
 
 **Example output:**
 ```
 ========================================
-   Media Resolution Enhancer
+      Image Upscaler
 ========================================
 
 File: C:\Photos\my_image.jpg
@@ -60,7 +60,7 @@ Enter scale (2-4) or press Enter for 2x: 2
 Processing with 2x scale using AI enhancement...
 
 ✅ Enhancement complete!
-Output: C:\Program Files (x86)\helper_tools\image_upscaler\enhanced_media\my_image_enhanced_ai.jpg
+Output: C:\Program Files (x86)\helper_tools\image_upscaler\output\my_image_up.jpg
 
 ========================================
           SUCCESS!

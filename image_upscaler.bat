@@ -62,7 +62,7 @@ if !errorlevel! equ 0 (
     echo           SUCCESS!
     echo ========================================
     echo.
-    echo Enhanced file saved to: image_upscaler\enhanced_media\
+    echo Enhanced file saved to: image_upscaler\output\
     echo.
 ) else (
     echo.

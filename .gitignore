@@ -6,6 +6,7 @@ complete_ui_extraction/
 extracted_audio/
 extracted_captions/
 enhanced_media/
+output/
 temp_frames/
 output_*/
 __pycache__/
