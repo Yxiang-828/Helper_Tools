@@ -1,23 +1,30 @@
 # Media Resolution Enhancer
 
-Enhances the resolution of images and videos using advanced computer vision algorithms. Supports multiple formats including PNG, JPG, MP4, MOV, and more.
+Enhances the resolution of images and videos using AI-powered super resolution and advanced computer vision algorithms. Supports multiple formats including PNG, JPG, MP4, MOV, and more.
 
 ## Features
 
-- **Image Enhancement**: Upscale and sharpen images with AI-like quality
+- **AI-Powered Enhancement**: Uses EDSR (Enhanced Deep Super Resolution) neural networks for natural, high-quality upscaling
+- **Classical Enhancement**: Improved computer vision algorithms as fallback
+- **Image Enhancement**: Upscale and enhance images with AI-like quality
 - **Video Enhancement**: Process entire videos frame-by-frame for high quality results
-- **Multiple Scales**: Choose from 1.5x, 2x, 3x, or 4x resolution increase
-- **Advanced Algorithms**: Uses CLAHE, sharpening, and noise reduction
+- **Multiple Scales**: Choose from 2x, 3x, or 4x resolution increase
+- **Automatic Fallback**: Falls back to classical methods if AI is unavailable
 - **Batch Processing**: Easy-to-use batch file interface
 
 ## Installation
 
 1. Install Python dependencies:
    ```
-   pip install opencv-python pillow numpy
+   pip install opencv-contrib-python pillow numpy
    ```
 
-2. Ensure FFmpeg is installed (required for video processing):
+2. Download AI models (automatic):
+   ```bash
+   py download_models.py
+   ```
+
+3. Ensure FFmpeg is installed (required for video processing):
    - Download from: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
    - Extract to `C:\ffmpeg\` (create folder if needed)
    - The script automatically uses `C:\ffmpeg\bin\ffmpeg.exe`
@@ -30,15 +37,15 @@ enhance_media.bat "path\to\image.jpg"
 enhance_media.bat "path\to\video.mp4"
 ```
 
-### With Custom Scale
+### With Custom Scale and Method
 ```cmd
-enhance_media.bat "image.png" --scale 3.0
-enhance_media.bat "video.mov" --scale 1.5
+enhance_media.bat "image.png" --scale 4 --method ai
+enhance_media.bat "video.mov" --scale 2 --method classical
 ```
 
 ### Command Line
 ```bash
-py media_enhancer.py "input_file" --scale 2.0 --output "output_file"
+py media_enhancer.py "input_file" --scale 2 --method ai --output "output_file"
 ```
 
 ## Supported Formats
@@ -49,13 +56,19 @@ py media_enhancer.py "input_file" --scale 2.0 --output "output_file"
 ### Videos
 - MP4, MOV, AVI, MKV, WebM, FLV
 
-## Enhancement Techniques
+## Enhancement Methods
 
-1. **Bicubic Interpolation**: Initial upscaling with high-quality algorithm
-2. **CLAHE**: Contrast Limited Adaptive Histogram Equalization for better contrast
-3. **Sharpening**: Edge enhancement using convolution filters
-4. **Noise Reduction**: Bilateral filtering to preserve edges while reducing noise
-5. **Color Enhancement**: LAB color space processing for more natural results
+### AI Method (Recommended)
+- **EDSR Neural Networks**: Deep learning-based super resolution
+- **Natural Results**: Produces more realistic and detailed enhancements
+- **Multiple Scales**: 2x, 3x, and 4x upscaling available
+- **Automatic Model Download**: Models are downloaded automatically on first use
+
+### Classical Method
+- **Bicubic Interpolation**: Initial upscaling with high-quality algorithm
+- **CLAHE**: Contrast Limited Adaptive Histogram Equalization for better contrast
+- **Sharpening**: Edge enhancement using convolution filters
+- **Color Enhancement**: LAB color space processing for more natural results
 
 ## Output
 
@@ -86,7 +99,8 @@ enhance_media.bat "input.png" --output "C:\Output\enhanced.png"
 
 ## Credits
 
-- **OpenCV**: Computer vision library for image processing (https://opencv.org/)
+- **OpenCV**: Computer vision library with DNN super resolution (https://opencv.org/)
+- **EDSR**: Enhanced Deep Super Resolution networks (https://github.com/Saafke/EDSR_Tensorflow)
 - **Pillow (PIL)**: Python Imaging Library (https://python-pillow.org/)
 - **FFmpeg**: Multimedia processing tool (https://ffmpeg.org/)
 - **NumPy**: Scientific computing library (https://numpy.org/)
