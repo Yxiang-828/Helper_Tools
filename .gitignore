@@ -1,13 +1,11 @@
 # Output folders
-image_upscaler/output/
-Audio_to_Text_Transcriber/output_transcripts/
-S&B_Extractor/complete_ui_extraction/
-S&B_Extractor/extracted_assets/
-S&B_Extractor/new_extractions/
-Video_to_GIF_Converter/extracted_gifs/
-Video_to_GIF_Converter/__pycache__/
-Video-subtitle&mp3-extractor/extracted_audio/
-Video-subtitle&mp3-extractor/extracted_captions/
+**/output/
+!image_upscaler/output/
+!image_upscaler/resized_output/
+
+# Output files
+*_output*
+*output.*
 
 # Temp files
 *.tmp
