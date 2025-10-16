@@ -1,6 +1,6 @@
-# Media Resolution Enhancer
+# Image Upscaler
 
-Enhances the resolution of images and videos using AI-powered super resolution and advanced computer vision algorithms. Supports multiple formats including PNG, JPG, MP4, MOV, and more.
+Enhances the resolution of images using AI-powered super resolution and advanced computer vision algorithms.
 
 ## Features
 
@@ -32,21 +32,48 @@ Enhances the resolution of images and videos using AI-powered super resolution a
 ## Usage
 
 ### Simple Usage (Recommended)
-Just drag and drop any image or video file onto `enhance_media.bat`, or run:
 ```cmd
 enhance_media.bat "path\to\your\file.jpg"
-enhance_media.bat "path\to\your\file.jpg" 4
 ```
 
-**Optional scale parameter**: Add a number (2, 3, or 4) for different scaling levels. Defaults to 2x if not specified.
+**What happens:**
+1. Run the command with your file path
+2. Choose scale factor when prompted (2x, 3x, or 4x)
+3. Wait for AI processing to complete
+4. Find enhanced file in `enhanced_media\` folder
 
-### What It Does
-- **Input**: Any supported media file (images or videos)
-- **Processing**: AI-powered super resolution (EDSR neural networks)
-- **Output**: Enhanced file saved to `enhanced_media/` folder
-- **Original**: Never modified
-- **Output**: Enhanced file saved to `enhanced_media/` folder
-- **Original**: Never modified
+**Example output:**
+```
+========================================
+   Media Resolution Enhancer
+========================================
+
+File: C:\Photos\my_image.jpg
+
+Choose scale factor:
+2. 2x (recommended)
+3. 3x
+4. 4x (high quality)
+
+Enter scale (2-4) or press Enter for 2x: 2
+
+Processing with 2x scale using AI enhancement...
+
+✅ Enhancement complete!
+Output: C:\Program Files (x86)\helper_tools\image_upscaler\enhanced_media\my_image_enhanced_ai.jpg
+
+========================================
+          SUCCESS!
+========================================
+
+Enhanced file saved to: Media_Resolution_Enhancer\enhanced_media\
+```
+
+### Advanced Usage (For power users)
+Use `enhance_media_advanced.bat` with command line parameters:
+```cmd
+enhance_media_advanced.bat "input_file" --scale 4 --method ai --output "custom_output.jpg"
+```
 
 ## Supported Formats
 
