@@ -1,39 +1,72 @@
 @echo off
 REM Media Resolution Enhancer - Simple Version
-REM Usage: enhance_media.bat "file_path" [scale]
+REM Usage: enhance_media.bat "input_file"
 
 if "%~1"=="" (
     echo ERROR: No input file specified!
     echo.
-    echo Usage: enhance_media.bat "path\to\your\file.jpg" [2^|3^|4]
+    echo Usage: enhance_media.bat "path\to\media_file"
     echo.
-    echo Supported formats: PNG, JPG, JPEG, BMP, TIFF, GIF, MP4, MOV, AVI, MKV, WebM, FLV
-    echo Scale options: 2 (default), 3, 4
+    echo Example: enhance_media.bat "C:\Photos\image.jpg"
     echo.
     pause
     exit /b 1
 )
 
-REM Set default scale
-set "scale=2"
+set "input_file=%~1"
 
-REM Check if scale was provided as second argument
-if not "%~2"=="" (
-    set "scale=%~2"
+REM Check if file exists
+if not exist "%input_file%" (
+    echo ERROR: File not found: %input_file%
+    echo.
+    pause
+    exit /b 1
 )
 
-echo Processing: %~1 (scale: %scale%x)
+echo ========================================
+echo    Media Resolution Enhancer
+echo ========================================
+echo.
+echo File: %input_file%
 echo.
 
-py "%~dp0Media_Resolution_Enhancer\media_enhancer.py" "%~1" --scale %scale% --method ai
+REM Ask for scale
+echo Choose scale factor:
+echo 2. 2x (recommended)
+echo 3. 3x
+echo 4. 4x (high quality)
+echo.
+set /p scale_choice="Enter scale (2-4) or press Enter for 2x: "
+
+if "%scale_choice%"=="2" (
+    set "scale=2"
+) else if "%scale_choice%"=="3" (
+    set "scale=3"
+) else if "%scale_choice%"=="4" (
+    set "scale=4"
+) else (
+    set "scale=2"
+)
+
+echo.
+echo Processing with %scale%x scale using AI enhancement...
+echo.
+
+py "%~dp0Media_Resolution_Enhancer\media_enhancer.py" "%input_file%" --scale %scale% --method ai
 
 if %errorlevel% equ 0 (
     echo.
-    echo SUCCESS! Enhanced file saved to Media_Resolution_Enhancer\enhanced_media\
+    echo ========================================
+    echo           SUCCESS!
+    echo ========================================
+    echo.
+    echo Enhanced file saved to: Media_Resolution_Enhancer\enhanced_media\
+    echo.
 ) else (
     echo.
-    echo ERROR: Processing failed.
+    echo ERROR: Enhancement failed.
+    echo.
 )
 
-echo.
-pause
+echo Press any key to exit...
+pause >nul
