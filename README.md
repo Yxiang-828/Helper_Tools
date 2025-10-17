@@ -1,5 +1,7 @@
 # Helper Tools Collection
 
+> Copyright (c) 2025 Yxiang-828 | Licensed under MIT License
+
 **Personal CLI tools for advanced developers. Fast, offline media processing. Not for casual users.**
 
 ## Why Helper Tools?

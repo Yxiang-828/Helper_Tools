@@ -1,3 +1,9 @@
+# ==============================================================================
+# File Scanner - Find and Remove Large Files for Storage Optimization
+# Copyright (c) 2025 Yxiang-828
+# Licensed under the MIT License (see LICENSE file in repository root)
+# ==============================================================================
+
 param (
     [int]$TopCount = 100,
     [string]$RootPath = "C:\",
