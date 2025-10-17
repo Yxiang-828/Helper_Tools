@@ -17,6 +17,10 @@
 *.jpg
 *.jpeg
 *.gif
+
+# Exception: Keep sample images for documentation
+!image_upscaler/samples/*.png
+!image_upscaler/samples/*.jpg
 *.mp4
 *.avi
 *.mkv
