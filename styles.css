@@ -406,7 +406,7 @@ section p:hover {
 .project-card a {
     display: inline-block;
     margin-top: 15px;
-    color: #ff6b6b;
+    color: #00d4ff;
     text-decoration: none;
     font-weight: bold;
     transition: all 0.3s;
@@ -423,9 +423,9 @@ section p:hover {
 }
 
 .project-card a:hover {
-    color: #ee5a24;
-    border-color: rgba(255, 107, 107, 0.3);
-    background: rgba(255, 107, 107, 0.1);
+    color: #00ffff;
+    border-color: rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.1);
     transform: translateX(5px);
 }
 
@@ -504,7 +504,7 @@ section p:hover {
     content: '⚡';
     position: absolute;
     left: 0;
-    color: #ff6b6b;
+    color: #00d4ff;
     transition: all 0.3s;
     font-size: 1.1rem;
 }
@@ -561,13 +561,13 @@ section p:hover {
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(45deg, #ff6b6b, #00d4ff);
+    background: linear-gradient(45deg, #00d4ff, #00d4ff);
     transition: width 0.4s;
 }
 
 .contact-info a:hover {
-    color: #ff6b6b;
-    background: rgba(255, 107, 107, 0.1);
+    color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
     transform: scale(1.05);
 }
 
