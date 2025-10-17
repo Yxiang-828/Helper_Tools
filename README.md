@@ -213,6 +213,8 @@ Features:
 
 Setup: Git repository required
 
+---
+
 ### Unity Image Extractor
 Extract images from Unity3D bundle files
 
