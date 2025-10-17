@@ -90,9 +90,10 @@ class GIFConverter:
         # 2x speed = half duration, 0.5x speed = double duration
         adjusted_duration = original_duration / self.speed_constraint_ratio
 
-        # GIF size estimation: ~0.3-0.6 bytes per pixel (depends on image complexity)
-        # Based on testing: ~0.7 bytes per pixel for conservative estimation
-        bytes_per_pixel = 0.2
+        # GIF size estimation: depends on image complexity and palette
+        # Conservative default tuned from empirical tests for typical clips
+        # Use a higher estimate to avoid undershooting the user target.
+        bytes_per_pixel = 0.2  # bytes per pixel (conservative estimate for GIF compression)
 
         # Calculate target size in bytes
         target_size_bytes = self.size_constraint_mb * 1024 * 1024
@@ -240,14 +241,28 @@ class GIFConverter:
 
                 print(f"   Attempt {iteration} result: {actual_size_mb:.2f} MB (target: {self.size_constraint_mb} MB)")
 
-                # Check if we're under the limit
-                if actual_size_mb <= self.size_constraint_mb:
-                    print(f"   ✅ Size constraint met on attempt {iteration}!")
+                # If we're within limit and not too far below target, accept
+                undershoot_threshold = 0.95  # accept if >= 95% of target
+                if actual_size_mb <= self.size_constraint_mb and actual_size_mb >= self.size_constraint_mb * undershoot_threshold:
+                    print(f"   ✅ Size constraint met on attempt {iteration} within acceptable undershoot ({actual_size_mb:.2f} MB)")
                     break
 
-                # If still over limit and not last iteration, reduce resolution
-                if iteration < max_iterations:
-                    # Reduce resolution by 20% each time
+                # If under target but too small (undershoot), try increasing resolution moderately
+                if actual_size_mb < self.size_constraint_mb * undershoot_threshold and iteration < max_iterations:
+                    # Increase resolution by 25% to get closer to target without exceeding
+                    increase_factor = 1.25
+                    # Cap at original video resolution
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   🔧 Undershot target by >5%, increasing resolution to {current_settings['width']}x{current_settings['height']} for next attempt...")
+
+                    # Remove the small file before next attempt
+                    if os.path.exists(optimized_path):
+                        os.remove(optimized_path)
+                    continue
+
+                # If over limit and not last iteration, reduce resolution
+                if actual_size_mb > self.size_constraint_mb and iteration < max_iterations:
                     reduction_factor = 0.8
                     current_settings['width'] = max(40, int(current_settings['width'] * reduction_factor))
                     current_settings['height'] = max(22, int(current_settings['height'] * reduction_factor))
@@ -257,7 +272,11 @@ class GIFConverter:
                     if os.path.exists(optimized_path):
                         os.remove(optimized_path)
                 else:
-                    print(f"   ⚠️  Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (over {self.size_constraint_mb} MB limit)")
+                    # Either we reached acceptable size or max iterations
+                    if actual_size_mb > self.size_constraint_mb:
+                        print(f"   ⚠️  Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (over {self.size_constraint_mb} MB limit)")
+                    else:
+                        print(f"   ✅ Final size after iterations: {actual_size_mb:.2f} MB")
 
             # Now create original version if requested
             create_original = input("\n🎬 Create original quality version? (y/n): ").lower().strip() == 'y'

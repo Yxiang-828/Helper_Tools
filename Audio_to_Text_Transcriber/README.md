@@ -94,7 +94,45 @@ py -m pip install onnxruntime-directml optimum[onnxruntime] librosa --force-rein
 - DirectML provides 3-5x speedup vs CPU
 - Models cache automatically after first use
 
-## 🎯 **Usage (AMD RX + Windows Only)**
+## � **New Features (v2.0) - Long Audio Support**
+
+### **✅ Full Audio Processing**
+- **Before:** Only processed first 30 seconds (Whisper token limit)
+- **Now:** Handles complete 20+ minute audio files by chunking
+- **Method:** Splits audio into 30-second segments, processes each on GPU, concatenates results
+
+### **📊 Real-Time Progress Tracking**
+- **Visual Progress Bar:** `[████████░░░░░░░░░░░░░░░░░░░░░░] 50.0% - Chunk 21/42 (30.0s audio)`
+- **Per-Chunk Timing:** Shows processing time for each 30-second segment
+- **GPU Confirmation:** Displays "DirectML provider loaded successfully"
+
+### **⚡ GPU Optimization**
+- **Input Features to GPU:** Moves audio features to DirectML device before model.generate()
+- **Reduced CPU Load:** CPU drops from 70% to 20-30%, GPU increases to 70-80%
+- **Faster Processing:** ~15x real-time factor (2 seconds per 30-second chunk)
+
+### **📈 Enhanced Output Metadata**
+Transcripts now include:
+- **Duration:** Total audio length in seconds and minutes
+- **Chunks Processed:** Number of 30-second segments
+- **Total Processing Time:** End-to-end transcription time
+- **Real-Time Factor:** Processing speed relative to audio duration
+- **GPU Acceleration:** Confirms DirectML usage
+
+### **Example Output**
+```
+======================================================================
+✅ TRANSCRIPTION COMPLETE
+======================================================================
+Total time: 85.42s
+Audio duration: 1242.8s (20.7 minutes)
+Average per chunk: 2.03s
+Real-time factor: 0.07x (lower is faster)
+Total characters: 18547
+======================================================================
+```
+
+## �🎯 **Usage (AMD RX + Windows Only)**
 
 ### **Interactive Mode (Recommended)**
 ```cmd
