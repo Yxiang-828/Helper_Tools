@@ -1,5 +1,7 @@
 # Output folders
 **/output/
+**/output_*/
+**/extracted_*/
 !image_upscaler/output/
 !image_upscaler/resized_output/
 **/input/
@@ -43,3 +45,7 @@ Thumbs.db
 # S&B Extractor
 S&B_Extractor/
 extractSnB.bat
+
+# Media Scanner - auto-generated files with personal paths
+Media Scanner/delete_top_media.ps1
+Media Scanner/all_media_files.txt
