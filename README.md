@@ -22,6 +22,7 @@ I built this for myself and fellow developers who understand code. These are pow
 - [Video Subtitle & MP3 Extractor](#video-subtitle--mp3-extractor)
 - [AMD GPU Image Upscaler](#amd-gpu-image-upscaler)
 - [AMD GPU Video Upscaler](#amd-gpu-video-upscaler)
+- [Media Scanner](#media-scanner)
 - [Git Auto-Push](#git-auto-push)
 - [Unity Image Extractor](#unity-image-extractor)
 
@@ -129,6 +130,28 @@ Features:
 Setup: FFmpeg and Real-ESRGAN Vulkan required
 
 [Full Documentation](video_upscaler/README.md)
+
+---
+
+### Media Scanner
+Identify and locate large media files for storage management
+
+Recursively scans directories to find the largest media files by size, allowing you to identify candidates for deletion or archiving to free up storage space.
+
+```bash
+powershell -ExecutionPolicy Bypass ".\Media Scanner\scan_media.ps1"
+```
+
+Features:
+- Scans entire directory tree for media files
+- Sorts by file size (largest first)
+- Generates list of top N files with sizes
+- Automatically opens top files in default applications
+- Outputs full media inventory to file
+
+Supported formats: MP4, AVI, MOV, MKV, WMV, FLV, WEBM, PNG, JPG, GIF, TIFF, BMP, SVG
+
+Setup: PowerShell 5.1+ required
 
 ---
 
