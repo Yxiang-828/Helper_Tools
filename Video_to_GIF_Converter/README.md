@@ -14,11 +14,11 @@ python converter.py "video.mp4" -s 5 -p 1.0 -o "output.gif"
 
 ## Parameters
 
-| Parameter | Description | Range | Example |
-|-----------|-------------|-------|---------|
-| `-s, --size` | Max file size (MB) | 1-50 | `-s 10` |
-| `-p, --speed` | Playback speed ratio | 0.1-2.0 | `-p 0.5` |
-| `-o, --output` | Output path | Optional | `-o result.gif` |
+| Parameter      | Description          | Range    | Example         |
+| -------------- | -------------------- | -------- | --------------- |
+| `-s, --size`   | Max file size (MB)   | 1-50     | `-s 10`         |
+| `-p, --speed`  | Playback speed ratio | 0.1-2.0  | `-p 0.5`        |
+| `-o, --output` | Output path          | Optional | `-o result.gif` |
 
 ## How It Works
 
@@ -66,11 +66,11 @@ for %f in (*.mp4) do python converter.py "%f" -s 5 -p 1.0
 
 ## Parameters Guide
 
-| Parameter | Description | Range | Example |
-|-----------|-------------|-------|---------|
-| `-s, --size` | Maximum file size in MB | 1-50 | `-s 10` |
-| `-p, --speed` | Playback speed ratio | 0.1-2.0 | `-p 0.5` |
-| `-o, --output` | Output GIF path | Optional | `-o result.gif` |
+| Parameter      | Description             | Range    | Example         |
+| -------------- | ----------------------- | -------- | --------------- |
+| `-s, --size`   | Maximum file size in MB | 1-50     | `-s 10`         |
+| `-p, --speed`  | Playback speed ratio    | 0.1-2.0  | `-p 0.5`        |
+| `-o, --output` | Output GIF path         | Optional | `-o result.gif` |
 
 ## How It Works
 

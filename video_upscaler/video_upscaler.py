@@ -378,7 +378,7 @@ Examples:
     parser.add_argument('--output', help='Output file path (optional, auto-generated if not specified)')
     parser.add_argument('--scale', type=int, default=4, choices=[2,3,4],
                        help='Upscale factor (default: 4)')
-    parser.add_argument('--method', choices=['ffmpeg', 'realesrgan', 'extract', 'process_existing'], default='ffmpeg',
+    parser.add_argument('--method', choices=['ffmpeg', 'realesrgan', 'extract', 'process_existing'], default='realesrgan',
                        help='Upscaling method, extract for frame extraction only, process_existing for upscaling already extracted frames')
     parser.add_argument('--format', choices=['mp4', 'gif'], default='mp4',
                        help='Output format (default: mp4)')
@@ -439,10 +439,10 @@ Examples:
             print("✓ FRAME EXTRACTION COMPLETE!")
             print(f"{'='*70}")
             print(f"Frames saved to: {output_dir / f'{video_path.stem}_frames'}")
-            
+
             # Ask about cleanup for extracted frames
             cleanup_frames(script_dir)
-            
+
             print(f"{'='*70}\n")
         elif args.method == 'process_existing':
             if success:
@@ -450,10 +450,10 @@ Examples:
                 print("✓ FRAME UPSCALING COMPLETE!")
                 print(f"{'='*70}")
                 print(f"Upscaled frames saved to output folder")
-                
+
                 # Ask about cleanup
                 cleanup_frames(script_dir)
-                
+
                 print(f"{'='*70}\n")
         elif success and output_path.exists():
             size_mb = output_path.stat().st_size / 1024 / 1024
@@ -463,7 +463,7 @@ Examples:
             print(f"Output: {output_path}")
             print(f"Size: {size_mb:.1f} MB")
             print(f"{'='*70}\n")
-            
+
             # Ask about cleanup for realesrgan method
             if args.method == 'realesrgan':
                 cleanup_frames(script_dir)
@@ -487,58 +487,58 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
     print("Method: Real-ESRGAN (AI Upscaling)")
     print("   Extracting frames → AI upscaling each frame → Reassembling video")
     print()
-    
+
     output_dir = script_dir / "output"
     output_dir.mkdir(exist_ok=True)
-    
+
     # Step 1: Extract frames
     frames_dir = output_dir / f"{video_path.stem}_frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"Step 1: Extracting frames to {frames_dir}")
-    
+
     extract_cmd = [
         'ffmpeg', '-i', str(video_path),
         '-qscale:v', '1',
         str(frames_dir / 'frame_%06d.png'),
         '-hide_banner', '-loglevel', 'error'
     ]
-    
+
     result = subprocess.run(extract_cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Frame extraction failed: {result.stderr}")
         return False
-    
+
     frame_count = len(list(frames_dir.glob('*.png')))
     print(f"✓ Extracted {frame_count} frames")
-    
+
     # Step 2: Upscale frames
     upscaled_dir = output_dir / f"{frames_dir.name}_upscaled_x{scale}"
     upscaled_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"\nStep 2: Upscaling {frame_count} frames to {upscaled_dir}")
-    
+
     realesrgan_exe = script_dir / "realesrgan-windows" / "realesrgan-ncnn-vulkan.exe"
     if not realesrgan_exe.exists():
         print(f"Real-ESRGAN not found: {realesrgan_exe}")
         print("   Download from: https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan")
         print("   Extract to: realesrgan-windows/")
         return False
-    
+
     frame_files = sorted(frames_dir.glob('*.png'))
     processed_count = 0
-    
+
     for i, frame_file in enumerate(frame_files, 1):
         upscaled_file = upscaled_dir / frame_file.name
-        
+
         # Skip if already processed
         if upscaled_file.exists():
             processed_count += 1
             continue
-        
+
         # Use anime model for better quality
         model_name = f'realesr-animevideov3-x{scale}'
-        
+
         upscale_cmd = [
             str(realesrgan_exe),
             '-i', str(frame_file),
@@ -548,7 +548,7 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
             '-s', str(scale),
             '-f', 'png'
         ]
-        
+
         result = subprocess.run(upscale_cmd, capture_output=True, text=True)
         if result.returncode == 0:
             processed_count += 1
@@ -556,14 +556,14 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
             print(f"\r{progress}", end="", flush=True)
         else:
             print(f"\nFailed to upscale {frame_file.name}: {result.stderr}")
-    
+
     print(f"\n✓ Successfully processed {processed_count}/{frame_count} frames")
-    
+
     # Step 3: Reassemble
     if processed_count == frame_count:
         print("\nStep 3: Reassembling video...")
         return reassemble_video_from_frames(upscaled_dir, video_path, output_path, script_dir, output_format)
-    
+
     return processed_count > 0
     """
     Process already extracted frames in the output folder - simple Real-ESRGAN per frame
@@ -574,20 +574,20 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
 
     output_dir = script_dir / "output"
     frames_dirs = list(output_dir.glob("*_frames"))
-    
+
     if not frames_dirs:
         print("No frame directories found in output folder")
         return False
-    
+
     frames_dir = frames_dirs[0]  # Use the first one found
     print(f"Found frames in: {frames_dir}")
-    
+
     # Create upscaled directory
     upscaled_dir = output_dir / f"{frames_dir.name}_upscaled_x{scale}"
     upscaled_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"Saving upscaled frames to: {upscaled_dir}")
-    
+
     realesrgan_exe = script_dir / "realesrgan-windows" / "realesrgan-ncnn-vulkan.exe"
     if not realesrgan_exe.exists():
         print(f"Real-ESRGAN not found: {realesrgan_exe}")
@@ -596,12 +596,12 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
     frame_files = sorted(frames_dir.glob('*.png'))
     total_frames = len(frame_files)
     print(f"Found {total_frames} frames to upscale")
-    
+
     processed_count = 0
-    
+
     for i, frame_file in enumerate(frame_files, 1):
         upscaled_file = upscaled_dir / frame_file.name
-        
+
         # Skip if already processed
         if upscaled_file.exists():
             processed_count += 1
@@ -622,7 +622,7 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
         ]
 
         result = subprocess.run(upscale_cmd, capture_output=True, text=True)
-        
+
         if result.returncode == 0 and upscaled_file.exists():
             processed_count += 1
         else:
@@ -630,12 +630,12 @@ def upscale_video_realesrgan(video_path, output_path, scale, script_dir, output_
             continue
 
     print(f"\n✓ Successfully processed {processed_count}/{total_frames} frames")
-    
+
     # Now reassemble into video
     if processed_count == total_frames:
         print("\nReassembling video from upscaled frames...")
         return reassemble_video_from_frames(upscaled_dir, video_path, output_path, script_dir, output_format)
-    
+
     return processed_count > 0
 
 def cleanup_frames(script_dir):
@@ -644,18 +644,18 @@ def cleanup_frames(script_dir):
     """
     output_dir = script_dir / "output"
     frame_dirs = list(output_dir.glob("*_frames*"))
-    
+
     if not frame_dirs:
         return
-    
+
     print("\nFrame folders found:")
     for i, d in enumerate(frame_dirs, 1):
         size_mb = sum(f.stat().st_size for f in d.glob("*.png")) / 1024 / 1024
         print(f"  {i}. {d.name} ({size_mb:.1f} MB)")
-    
+
     print(f"\nThese folders contain the extracted and upscaled frames.")
     print(f"They take up significant disk space but can be useful for debugging.")
-    
+
     while True:
         response = input("\nDo you want to keep these frame folders? (y/n): ").strip().lower()
         if response in ['y', 'yes']:
@@ -682,41 +682,67 @@ def reassemble_video_from_frames(frames_dir, original_video, output_path, script
     # Get video info
     info = get_video_info(original_video)
     fps = info.get('fps', 30)
-    
+
+    # Determine scale from frames_dir name
+    import re
+    scale_match = re.search(r'_x(\d+)', frames_dir.name)
+    scale = int(scale_match.group(1)) if scale_match else 4
+
+    width = info.get('width', 1920) * scale
+    height = info.get('height', 1080) * scale
+
+    if width > 4000 or height > 2000:
+        qp = '24'
+        preset = 'ultrafast'
+        crf = 28
+    else:
+        qp = '18'
+        preset = 'fast'
+        crf = 18
+
     if output_format == 'gif':
         print(f"Creating GIF at {fps} FPS...")
         try:
             import moviepy
             ImageSequenceClip = moviepy.ImageSequenceClip
             import glob
-            
+
             # Get all frame files
             frame_pattern = str(frames_dir / 'frame_*.png')
             frame_files = sorted(glob.glob(frame_pattern))
-            
+
             if not frame_files:
                 print("No frame files found for GIF creation")
                 return False
-            
+
             # Create GIF clip
             clip = ImageSequenceClip(frame_files, fps=fps)
-            
+
             # Write GIF
             clip.write_gif(str(output_path), fps=fps)
-            
+
             print("✓ GIF created successfully!")
             return True
-            
+
         except ImportError:
             print("MoviePy not available for GIF creation. Install with: pip install moviepy")
             return False
         except Exception as e:
             print(f"GIF creation failed: {e}")
             return False
-    
+
     # MP4 reassembly
     print(f"Reassembling MP4 at {fps} FPS...")
-    
+
+    # For high resolutions, skip AMD encoding as it may fail
+    use_amd = not (width > 4000 or height > 2000)
+    if use_amd:
+        encoder = 'h264_amf'
+        extra_args = ['-quality', 'quality', '-rc', 'cqp', '-qp_i', qp, '-qp_p', qp]
+    else:
+        encoder = 'libx264'
+        extra_args = ['-preset', preset, '-crf', str(crf)]
+
     # FFmpeg command to create video from frames
     reassemble_cmd = [
         'ffmpeg',
@@ -725,71 +751,87 @@ def reassemble_video_from_frames(frames_dir, original_video, output_path, script
         '-i', str(original_video),  # Original video for audio
         '-map', '0:v',  # Video from frames
         '-map', '1:a?',  # Audio from original (optional)
-        '-c:v', 'h264_amf',  # Hardware encoding
-        '-quality', 'quality',
-        '-rc', 'cqp',
-        '-qp_i', '18',
-        '-qp_p', '18',
+        '-c:v', encoder,
+    ] + extra_args + [
         '-c:a', 'copy',  # Copy audio
         '-shortest',
         '-y',
         str(output_path),
         '-hide_banner'
     ]
-    
+
     try:
         result = subprocess.run(reassemble_cmd, capture_output=True, text=True, timeout=300)
         if result.returncode == 0:
-            print("✓ Video reassembled successfully!")
+            if use_amd:
+                print("✓ Video reassembled with AMD encoding!")
+            else:
+                print("✓ Video reassembled with CPU encoding!")
             return True
         else:
-            print(f"AMD encoder failed: {result.stderr}")
-            # Try CPU encoding
-            print("Trying CPU encoding...")
-            cpu_cmd = reassemble_cmd.copy()
-            cpu_cmd[cpu_cmd.index('h264_amf')] = 'libx264'
-            cpu_cmd.remove('-quality')
-            cpu_cmd.remove('quality')
-            cpu_cmd.remove('-rc')
-            cpu_cmd.remove('cqp')
-            cpu_cmd.remove('-qp_i')
-            cpu_cmd.remove('18')
-            cpu_cmd.remove('-qp_p')
-            cpu_cmd.remove('18')
-            cpu_cmd.insert(cpu_cmd.index('libx264') + 1, '-preset')
-            cpu_cmd.insert(cpu_cmd.index('libx264') + 2, 'fast')
-            cpu_cmd.insert(cpu_cmd.index('libx264') + 3, '-crf')
-            cpu_cmd.insert(cpu_cmd.index('libx264') + 4, '18')
-            
-            result = subprocess.run(cpu_cmd, capture_output=True, text=True, timeout=600)
-            if result.returncode == 0:
-                print("✓ Video reassembled with CPU encoding!")
-                return True
+            if use_amd:
+                print(f"AMD encoder failed: {result.stderr}")
+                # Try CPU encoding
+                print("Trying CPU encoding...")
+                cpu_cmd = reassemble_cmd.copy()
+                cpu_cmd[cpu_cmd.index('h264_amf')] = 'libx264'
+                cpu_cmd.remove('-quality')
+                cpu_cmd.remove('quality')
+                cpu_cmd.remove('-rc')
+                cpu_cmd.remove('cqp')
+                cpu_cmd.remove('-qp_i')
+                cpu_cmd.remove(qp)
+                cpu_cmd.remove('-qp_p')
+                cpu_cmd.remove(qp)
+                cpu_cmd.insert(cpu_cmd.index('libx264') + 1, '-preset')
+                cpu_cmd.insert(cpu_cmd.index('libx264') + 2, preset)
+                cpu_cmd.insert(cpu_cmd.index('libx264') + 3, '-crf')
+                cpu_cmd.insert(cpu_cmd.index('libx264') + 4, str(crf))
+
+                result = subprocess.run(cpu_cmd, capture_output=True, text=True, timeout=600)
+                if result.returncode == 0:
+                    print("✓ Video reassembled with CPU encoding!")
+                    return True
+                else:
+                    print(f"CPU encoding also failed: {result.stderr}")
+                    return False
             else:
-                print(f"CPU encoding also failed: {result.stderr}")
+                print(f"CPU encoding failed: {result.stderr}")
                 return False
     except subprocess.TimeoutExpired:
         print("✗ Video reassembly timed out")
         return False
 
-def cleanup_frames(script_dir):
+def cleanup_frames(script_dir, force_delete=False):
     """
     Ask user if they want to keep the frame folders and clean up if not
     """
     output_dir = script_dir / "output"
     frame_dirs = list(output_dir.glob("*_frames*"))
-    
+
     if not frame_dirs:
         return
-    
+
+    if force_delete:
+        print("Deleting frame folders to save disk space...")
+        for frame_dir in frame_dirs:
+            try:
+                import shutil
+                shutil.rmtree(frame_dir)
+                print(f"  ✓ Deleted {frame_dir.name}")
+            except Exception as e:
+                print(f"  ✗ Failed to delete {frame_dir.name}: {e}")
+        print("Cleanup complete.")
+        return
+
     print("\nFrame folders found:")
     for i, d in enumerate(frame_dirs, 1):
         size_mb = sum(f.stat().st_size for f in d.glob("*.png")) / 1024 / 1024
         print(f"  {i}. {d.name} ({size_mb:.1f} MB)")
-    
+
     print(f"\nThese folders contain the extracted and upscaled frames.")
     print(f"They take up significant disk space but can be useful for debugging.")
-    
+
     while True:
         response = input("\nDo you want to keep these frame folders? (y/n): ").strip().lower()
         if response in ['y', 'yes']:

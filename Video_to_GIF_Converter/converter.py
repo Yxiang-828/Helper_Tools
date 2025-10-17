@@ -180,7 +180,7 @@ class GIFConverter:
             # Use extracted_gifs folder in the converter's own directory
             extracted_gifs_dir = Path(__file__).parent / "extracted_gifs"
             extracted_gifs_dir.mkdir(exist_ok=True)
-            
+
             video_name = Path(self.video_info['path']).stem
             optimized_path = str(extracted_gifs_dir / f"{video_name}.gif")
             original_path = str(extracted_gifs_dir / f"{video_name}_original.gif")

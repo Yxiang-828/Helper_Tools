@@ -2,11 +2,11 @@
 **/output/
 !image_upscaler/output/
 !image_upscaler/resized_output/
-
+**/input/
+**/models/
 # Output files
 *_output*
 *output.*
-
 # Temp files
 *.tmp
 *.log
@@ -21,6 +21,7 @@
 *.mov
 *.webm
 *.flv
+*.txt
 
 # Python
 __pycache__/

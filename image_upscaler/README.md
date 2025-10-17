@@ -63,18 +63,18 @@ Based on testing with 7 carefully selected samples (including a "special" near-c
 ### Sample 1-3: Standard Blurry Images
 These intentionally degraded samples show how each method handles major quality restoration.
 
-| Comparison | Image |
-|------------|-------|
+| Comparison                 | Image                                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **Sample 1 - Real-ESRGAN** | ![Sample 1 Real-ESRGAN](samples/realesrgan_1.png)<br>*Left: Original blurry image, Right: Real-ESRGAN 4x upscaled* |
-| **Sample 1 - EDSR** | ![Sample 1 EDSR](samples/edsr_1.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled* |
+| **Sample 1 - EDSR**        | ![Sample 1 EDSR](samples/edsr_1.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled*                     |
 | **Sample 2 - Real-ESRGAN** | ![Sample 2 Real-ESRGAN](samples/realesrgan_2.png)<br>*Left: Original blurry image, Right: Real-ESRGAN 4x upscaled* |
-| **Sample 2 - EDSR** | ![Sample 2 EDSR](samples/edsr_2.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled* |
+| **Sample 2 - EDSR**        | ![Sample 2 EDSR](samples/edsr_2.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled*                     |
 | **Sample 3 - Real-ESRGAN** | ![Sample 3 Real-ESRGAN](samples/realesrgan_3.png)<br>*Left: Original blurry image, Right: Real-ESRGAN 4x upscaled* |
-| **Sample 3 - EDSR** | ![Sample 3 EDSR](samples/edsr_3.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled* |
+| **Sample 3 - EDSR**        | ![Sample 3 EDSR](samples/edsr_3.png)<br>*Left: Original blurry image, Right: EDSR 4x upscaled*                     |
 
 ### Special Case: Near-Complete Image
-| Comparison | Image |
-|------------|-------|
+| Comparison         | Image                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Special - EDSR** | ![Special EDSR](samples/edsr_special.png)<br>*Left: Near-complete image, Right: EDSR refined*<br>*EDSR excels at gentle, precise enhancements* |
 
 **Key Insights**:

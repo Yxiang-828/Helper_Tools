@@ -1,62 +1,140 @@
-# Video Upscaler and Sharpener
+# Video Upscaler
 
-**AI-Powered Video Enhancement** - Upscale and sharpen videos using EDSR models or classical methods. Processes each frame individually for maximum quality.
+This is my project made for my own efficiency with an AMD GPU and Windows setup. Why did I make this? No such thing as we.
 
-## 🎯 **Features**
+An efficient video upscaling tool optimized for AMD GPUs on Windows, supporting multiple upscaling methods including AI-based Real-ESRGAN and classical FFmpeg approaches. Designed to handle high-resolution videos with automatic fallback to CPU encoding when necessary.
 
-### **✅ AI Video Upscaling**
-- **EDSR Models:** Uses the same AI models as image upscaler
-- **Frame-by-Frame Processing:** Each video frame gets individual enhancement
-- **Multiple Scales:** 2x, 3x, or 4x upscaling
-- **Fallback Support:** Automatically falls back to classical methods if AI fails
+## Features
 
-### **⚡ Classical Enhancement**
-- **CLAHE Contrast:** Adaptive contrast enhancement
-- **Lanczos Interpolation:** High-quality upsampling
-- **Unsharp Mask:** Intelligent sharpening without artifacts
+### Upscaling Methods
 
-### **📊 Progress Tracking**
-- **Real-Time Progress:** Visual progress bar shows frame processing
-- **Frame Counter:** Current frame / total frames
-- **Resolution Display:** Shows input → output dimensions
-- **Time Estimation:** Based on total frame count
+- **Real-ESRGAN**: AI-powered upscaling using Vulkan acceleration, processes each frame individually for maximum quality
+- **FFmpeg**: Fast classical upscaling using Lanczos interpolation with AMD VCE hardware encoding
+- **Extract**: Frame extraction only, for manual processing
+- **Process Existing**: Upscale already extracted frames
 
-## 🚀 **Setup**
+### Output Formats
 
-### **Prerequisites**
-- ✅ OpenCV installed (same as image upscaler)
-- ✅ EDSR models (automatically copied from image_upscaler)
-- ✅ FFmpeg (for video codec support)
+- MP4 (default): Hardware-accelerated encoding with audio preservation
+- GIF: Animated GIF creation from upscaled frames
 
-### **Directory Structure**
+### Scaling Options
+
+- 2x, 3x, 4x upscaling factors (default: 4x)
+
+### Hardware Support
+
+- AMD GPU acceleration via AMF (H.264) for encoding
+- Vulkan acceleration for Real-ESRGAN AI processing
+- Automatic CPU fallback for high-resolution videos (>4000px width or >2000px height)
+
+## CPU Encoding Details
+
+When AMD hardware encoding is unavailable or fails (common with high-resolution outputs), the tool automatically falls back to CPU-based encoding using FFmpeg's libx264 encoder:
+
+- **Preset**: 'fast' for standard resolutions, 'ultrafast' for high resolutions (>4000px)
+- **CRF**: 18 for standard quality, 28 for high resolutions to maintain encoding speed
+- **QP**: 18-24 depending on resolution for constant quality encoding
+- **Timeout**: 10 minutes for reassembly operations
+
+This ensures reliable output even on systems without compatible AMD GPUs.
+
+## Real-ESRGAN Step-by-Step Procedure
+
+Real-ESRGAN bypasses VRAM limitations by processing frames sequentially rather than loading entire videos into memory:
+
+1. **Frame Extraction**: Extract all video frames to PNG files in a temporary directory using FFmpeg
+2. **Individual Frame Upscaling**: Process each frame one-by-one with Real-ESRGAN Vulkan executable
+   - Each frame is loaded, upscaled, and saved to disk immediately
+   - Progress tracking shows current frame/total frames
+   - Frames are stored persistently to allow resuming interrupted operations
+3. **Frame Verification**: Check dimensions and file integrity of upscaled frames
+4. **Video Reassembly**: Combine upscaled frames back into video using FFmpeg
+   - Uses original video's audio track
+   - Applies appropriate encoding (AMD hardware or CPU fallback)
+   - Supports both MP4 and GIF output formats
+
+This frame-by-frame approach ensures low memory usage regardless of video length or resolution.
+
+## Usage
+
+### Basic Usage
+
+```bash
+py video_upscaler.py input_video.mp4
+```
+
+### Advanced Options
+
+```bash
+# AI upscaling with custom scale
+py video_upscaler.py input.mp4 --method realesrgan --scale 4
+
+# Fast hardware upscaling
+py video_upscaler.py input.mp4 --method ffmpeg --scale 2
+
+# Extract frames only
+py video_upscaler.py input.mp4 --method extract
+
+# Process existing frames
+py video_upscaler.py input.mp4 --method process_existing --format gif
+
+# Custom output path
+py video_upscaler.py input.mp4 --output output.mp4
+```
+
+### Batch File Interface
+
+Use the accompanying `video_upscaler.bat` for interactive prompts:
+
+```cmd
+./video_upscaler.bat
+```
+
+The batch file provides user-friendly prompts for all parameters with numbered options.
+
+## Requirements
+
+- Python 3.13
+- FFmpeg (add to PATH or place in script directory)
+- Real-ESRGAN Vulkan executable (included in realesrgan-windows/)
+- OpenCV (optional, for frame verification)
+
+## Directory Structure
+
 ```
 video_upscaler/
-├── video_upscaler.py    # Main script
-├── models/             # EDSR model files
-│   ├── EDSR_x2.pb
-│   ├── EDSR_x3.pb
-│   └── EDSR_x4.pb
-├── input/              # Input videos
-├── output/             # Enhanced videos
-└── README.md          # This file
+├── video_upscaler.py          # Main script
+├── realesrgan-windows/        # Real-ESRGAN Vulkan executable
+│   ├── realesrgan-ncnn-vulkan.exe
+│   └── models/
+├── input/                     # Input video files
+├── output/                    # Output videos and frame folders
+└── README.md
 ```
 
-### **Models Setup**
-Models are automatically copied from `../image_upscaler/models/`. If missing:
-```cmd
-copy "..\image_upscaler\models\*" "models\"
-```
+## Output Management
 
-## 📊 **Performance**
+- Videos are saved to `output/` directory with descriptive names
+- Frame folders are created for Real-ESRGAN processing
+- Cleanup prompts allow keeping or removing temporary frame data
+- High-resolution videos automatically use CPU encoding to ensure compatibility
 
-| Scale | Method | Processing Speed | Quality |
-| ----- | ------ | ---------------- | ------- |
-| **2x** | AI EDSR | ~5-10 fps | Excellent |
-| **3x** | AI EDSR | ~2-5 fps  | Excellent |
-| **4x** | AI EDSR | ~1-3 fps  | Excellent |
-| **2x** | Classical | ~15-30 fps | Good |
-| **3x** | Classical | ~10-20 fps | Good |
-| **4x** | Classical | ~5-15 fps | Good |
+## Performance Notes
+
+- Real-ESRGAN: Frame-by-frame processing, slower but highest quality
+- FFmpeg: Hardware-accelerated when possible, fast processing
+- Memory usage: Low due to sequential frame processing
+- GPU requirements: AMD GPU with AMF support for hardware encoding
+
+| Scale  | Method    | Processing Speed | Quality   |
+| ------ | --------- | ---------------- | --------- |
+| **2x** | AI EDSR   | ~5-10 fps        | Excellent |
+| **3x** | AI EDSR   | ~2-5 fps         | Excellent |
+| **4x** | AI EDSR   | ~1-3 fps         | Excellent |
+| **2x** | Classical | ~15-30 fps       | Good      |
+| **3x** | Classical | ~10-20 fps       | Good      |
+| **4x** | Classical | ~5-15 fps        | Good      |
 
 **Notes:**
 - Speed depends on video resolution and hardware
@@ -165,15 +243,15 @@ copy "..\image_upscaler\models\*" "models\"
 
 ## 📈 **Comparison: Image vs Video Upscaling**
 
-| Aspect | Image Upscaler | Video Upscaler |
-| ------ | -------------- | -------------- |
-| **Input** | Single image | Video file |
-| **Processing** | One image | Frame-by-frame |
-| **Time** | Seconds | Minutes/hours |
-| **Output** | Enhanced image | Enhanced video |
-| **Audio** | N/A | Preserved |
-| **Models** | Same EDSR | Same EDSR |
-| **Methods** | AI + Classical | AI + Classical |
+| Aspect         | Image Upscaler | Video Upscaler |
+| -------------- | -------------- | -------------- |
+| **Input**      | Single image   | Video file     |
+| **Processing** | One image      | Frame-by-frame |
+| **Time**       | Seconds        | Minutes/hours  |
+| **Output**     | Enhanced image | Enhanced video |
+| **Audio**      | N/A            | Preserved      |
+| **Models**     | Same EDSR      | Same EDSR      |
+| **Methods**    | AI + Classical | AI + Classical |
 
 ## 🎬 **Example Output**
 

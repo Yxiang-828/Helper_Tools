@@ -21,6 +21,7 @@ I built this for myself and fellow developers who understand code. These are pow
 - [Video to GIF Converter](#video-to-gif-converter)
 - [Video Subtitle & MP3 Extractor](#video-subtitle--mp3-extractor)
 - [AMD GPU Image Upscaler](#amd-gpu-image-upscaler)
+- [AMD GPU Video Upscaler](#amd-gpu-video-upscaler)
 - [Git Auto-Push](#git-auto-push)
 - [Unity Image Extractor](#unity-image-extractor)
 
@@ -105,6 +106,29 @@ Features:
 Setup: Models download automatically
 
 [Full Documentation](image_upscaler/README.md)
+
+---
+
+### AMD GPU Video Upscaler
+AI-powered video enhancement with AMD GPU acceleration
+
+Upscales videos using Real-ESRGAN AI or fast FFmpeg methods, optimized for AMD GPUs.
+
+```bash
+video_upscaler.bat
+```
+
+Features:
+- Real-ESRGAN AI upscaling (frame-by-frame)
+- FFmpeg hardware encoding with AMD VCE
+- 2x, 3x, 4x scaling
+- MP4 and GIF output
+- Automatic CPU fallback for high resolution
+- Audio preservation
+
+Setup: FFmpeg and Real-ESRGAN Vulkan required
+
+[Full Documentation](video_upscaler/README.md)
 
 ---
 
