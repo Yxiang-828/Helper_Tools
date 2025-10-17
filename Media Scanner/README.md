@@ -1,8 +1,32 @@
-# Media Scanner - Optimized File Discovery Tool
+# 🚀 Universal File Scanner v2.0 - Lightning-Fast File Discovery
 
-High-performance PowerShell script that scans entire drives (including C:\) for the largest media files using optimized .NET APIs and advanced data structures. Scans **469,385 files in 151 seconds** (10-50x faster than standard PowerShell methods).
+**The most powerful file scanner for Windows** - Find the largest files on your system in seconds! Uses optimized .NET APIs and advanced data structures to scan entire drives 10-50x faster than standard methods.
 
-## Performance Overview
+## ✨ Features
+
+- 🎯 **Preset File Type Groups**: Media, Video, Audio, Documents, Archives, Code, Games, and more!
+- 🔧 **Custom Extensions**: Define your own file types to search
+- ⚡ **Blazing Fast**: Scans 469,385 files in 151 seconds (~3,100 files/second)
+- 🧠 **Smart Algorithms**: Min-heap + BFS for optimal performance
+- 🎨 **Beautiful Output**: Color-coded results with emoji indicators
+- 🗑️ **Interactive Deletion**: Safely remove large files with confirmation prompts
+- 💾 **Detailed Reports**: Full file lists and statistics
+
+## 🎯 Preset File Types
+
+| Preset | File Types | Use Case |
+|--------|------------|----------|
+| **media** | Images + Videos | Find large media files (DEFAULT) |
+| **video** | mp4, avi, mov, mkv, etc. | Video files only |
+| **image** | jpg, png, gif, bmp, etc. | Image files only |
+| **audio** | mp3, wav, flac, aac, etc. | Music and audio files |
+| **document** | pdf, docx, xlsx, txt, md | Office documents |
+| **archive** | zip, rar, 7z, tar, iso | Compressed archives |
+| **code** | py, js, cs, cpp, java | Source code files |
+| **game** | unity3d, pak, bsa, esp | Game asset files |
+| **all** | * (everything) | Scan all files |
+
+## 📊 Performance Overview
 
 **Device Tested**: 16-core CPU, 32GB RAM, 1.82TB disk
 **Result**: Found 469,385 media files across C:\ in **151 seconds** (~3,100 files/second)
@@ -14,6 +38,49 @@ High-performance PowerShell script that scans entire drives (including C:\) for 
 | **This Script (.NET APIs)** | **151s** | **3,100** | **Baseline (1x)** |
 | Standard Get-ChildItem | 2,500s+ | ~188 | 16-50x slower |
 | Get-ChildItem with filters | 1,800s+ | ~260 | 12x slower |
+
+## 🚀 Quick Start
+
+### Basic Usage (Default: Media Files)
+```powershell
+.\media_finder.ps1
+```
+
+### Scan for Specific File Types
+```powershell
+# Find top 50 video files
+.\media_finder.ps1 -FileType video -TopCount 50
+
+# Find audio files (music library cleanup)
+.\media_finder.ps1 -FileType audio
+
+# Find game files in D:\Games
+.\media_finder.ps1 -RootPath "D:\Games" -FileType game
+
+# Find all large files
+.\media_finder.ps1 -FileType all -TopCount 200
+```
+
+### Custom File Types
+```powershell
+# Find executables and installers
+.\media_finder.ps1 -CustomExtensions @('.exe', '.msi', '.dll')
+
+# Find log files
+.\media_finder.ps1 -CustomExtensions @('.log', '.txt') -RootPath "C:\Logs"
+```
+
+### Advanced Examples
+```powershell
+# Scan external drive for videos
+.\media_finder.ps1 -RootPath "E:\" -FileType video -TopCount 100
+
+# Find all documents in user folder
+.\media_finder.ps1 -RootPath "$env:USERPROFILE" -FileType document
+
+# Deep scan for archives
+.\media_finder.ps1 -FileType archive -TopCount 25
+```
 
 ## Algorithm Deep Dive
 
