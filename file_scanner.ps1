@@ -13,7 +13,7 @@ if ($Help) {
 ║          Powered by .NET EnumerateFiles (10-50x faster!)         ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
-Usage: .\media_finder.ps1 [-TopCount INT] [-RootPath PATH] [-FileType TYPE] [-CustomExtensions ARRAY] [-Help]
+Usage: .\file_scanner.ps1 [-TopCount INT] [-RootPath PATH] [-FileType TYPE] [-CustomExtensions ARRAY] [-Help]
 
 Parameters:
   -TopCount INT         : Number of largest files to find (default: 100)
@@ -34,11 +34,11 @@ Preset File Types:
   all        - All files (no filtering)
 
 Examples:
-  .\media_finder.ps1                                     # Scan C:\ for top 100 media files
-  .\media_finder.ps1 -FileType video                     # Videos only
-  .\media_finder.ps1 -FileType audio -TopCount 50        # Top 50 audio files
-  .\media_finder.ps1 -CustomExtensions @('.exe','.msi')  # Custom file types
-  .\media_finder.ps1 -RootPath 'D:\Games' -FileType game # Scan D:\Games for game files
+  .\file_scanner.ps1                                     # Scan C:\ for top 100 media files
+  .\file_scanner.ps1 -FileType video                     # Videos only
+  .\file_scanner.ps1 -FileType audio -TopCount 50        # Top 50 audio files
+  .\file_scanner.ps1 -CustomExtensions @('.exe','.msi')  # Custom file types
+  .\file_scanner.ps1 -RootPath 'D:\Games' -FileType game # Scan D:\Games for game files
 
 "@
     Write-Host $helpText -ForegroundColor Cyan
@@ -193,7 +193,7 @@ $totalSizeGB = [math]::Round($totalSize / 1GB, 2)
 $totalSizeMB = [math]::Round($totalSize / 1MB, 2)
 
 # Write all results to file
-$scannerDir = "$pwd\Media Scanner"
+$scannerDir = "$pwd\File_Scanner"
 if (-not (Test-Path $scannerDir)) {
     New-Item -ItemType Directory -Path $scannerDir -Force | Out-Null
 }

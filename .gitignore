@@ -46,6 +46,6 @@ Thumbs.db
 S&B_Extractor/
 extractSnB.bat
 
-# Media Scanner - auto-generated files with personal paths
-Media Scanner/delete_top_media.ps1
-Media Scanner/all_media_files.txt
+# File Scanner - auto-generated files with personal paths
+File_Scanner/delete_top_media.ps1
+File_Scanner/all_media_files.txt
