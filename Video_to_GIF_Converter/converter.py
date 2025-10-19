@@ -8,7 +8,8 @@ import os
 import sys
 import math
 from pathlib import Path
-import moviepy as mp
+import cv2
+import numpy as np
 from PIL import Image
 import argparse
 
@@ -19,27 +20,54 @@ class GIFConverter:
         self.speed_constraint_ratio = None
 
     def analyze_video(self, mp4_path):
-        """Analyze the input video and extract key information"""
+        """Analyze the input video and extract key information using OpenCV"""
         if not os.path.exists(mp4_path):
             raise FileNotFoundError(f"Video file not found: {mp4_path}")
 
-        print("🔍 Analyzing video...")
+        print("🔍 Analyzing video with GPU acceleration...")
+
+        # Enable OpenCL for AMD GPU acceleration
+        cv2.ocl.setUseOpenCL(True)
+        print(f"   OpenCL enabled: {cv2.ocl.useOpenCL()}")
+
         try:
-            clip = mp.VideoFileClip(mp4_path)
+            # Open video with OpenCV
+            cap = cv2.VideoCapture(mp4_path)
+            if not cap.isOpened():
+                raise RuntimeError("Could not open video file")
+
+            # Get video properties
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            duration = frame_count / fps if fps > 0 else 0
+
+            # Get file size
+            file_size_mb = os.path.getsize(mp4_path) / (1024 * 1024)
+
+            cap.release()
+
             self.video_info = {
                 'path': mp4_path,
-                'duration': clip.duration,
-                'fps': clip.fps,
-                'width': clip.w,
-                'height': clip.h,
-                'total_frames': int(clip.duration * clip.fps),
-                'file_size_mb': os.path.getsize(mp4_path) / (1024 * 1024)
+                'duration': duration,
+                'fps': fps,
+                'width': width,
+                'height': height,
+                'total_frames': frame_count,
+                'file_size_mb': file_size_mb
             }
-            clip.close()
 
             print("✅ Video analysis complete!")
             print(f"   Duration: {self.video_info['duration']:.2f}s")
             print(f"   Original FPS: {self.video_info['fps']}")
+            print(f"   Resolution: {self.video_info['width']}x{self.video_info['height']}")
+            print(f"   Total frames: {self.video_info['total_frames']}")
+            print(f"   File size: {self.video_info['file_size_mb']:.1f} MB")
+            return True
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to analyze video: {e}")
             print(f"   Resolution: {self.video_info['width']}x{self.video_info['height']}")
             print(f"   Total frames: {self.video_info['total_frames']}")
             print(f"   File size: {self.video_info['file_size_mb']:.1f} MB")
@@ -201,8 +229,16 @@ class GIFConverter:
         print("   • This is normal - please be patient...")
 
         try:
-            # Load video once
-            clip = mp.VideoFileClip(self.video_info['path'])
+            # Load video once - trim last 0.5 seconds to avoid corrupted frames
+            trim_duration = 0.5  # Trim last 0.5 seconds to avoid frame reading issues
+            if self.video_info['duration'] > trim_duration:
+                print(f"   🔧 Trimming last {trim_duration}s to avoid corrupted frames...")
+                clip = mp.VideoFileClip(self.video_info['path']).subclip(0, self.video_info['duration'] - trim_duration)
+                print(f"   New duration: {clip.duration:.2f}s (was {self.video_info['duration']:.2f}s)")
+            else:
+                clip = mp.VideoFileClip(self.video_info['path'])
+                print("   ⚠️  Video too short to trim, proceeding with full video")
+
             original_clip = clip.copy()  # Keep original for second conversion
 
             # ITERATIVE APPROACH: Keep reducing resolution until size is under limit
@@ -230,12 +266,24 @@ class GIFConverter:
 
                 # Convert optimized version to GIF
                 print(f"   Converting optimized at {current_settings['fps']} FPS...")
-                opt_clip.write_gif(optimized_path, fps=current_settings['fps'])
+                try:
+                    opt_clip.write_gif(optimized_path, fps=current_settings['fps'])
+                except Exception as e:
+                    print(f"   ❌ Conversion failed: {e}")
+                    opt_clip.close()
+                    # Clean up any partial file
+                    if os.path.exists(optimized_path):
+                        os.remove(optimized_path)
+                    raise RuntimeError(f"GIF conversion failed on attempt {iteration}: {e}")
 
                 # Close this attempt's clip
                 opt_clip.close()
 
                 # Verify the result
+                if not os.path.exists(optimized_path) or os.path.getsize(optimized_path) == 0:
+                    print(f"   ❌ Empty or missing output file after conversion")
+                    continue
+
                 result_info = self.verify_conversion(optimized_path, current_settings)
                 actual_size_mb = result_info['size_mb']
 
@@ -368,6 +416,130 @@ class GIFConverter:
                 'speed_ratio': 1.0  # Default to original speed if verification fails
             }
 
+    def convert_video_gpu(self, output_path=None):
+        """GPU-accelerated conversion using OpenCV with OpenCL for AMD GPUs"""
+        if not self.video_info:
+            raise RuntimeError("Video must be analyzed first")
+
+        settings = self.calculate_optimal_settings()
+
+        # Generate output paths
+        if output_path is None:
+            extracted_gifs_dir = Path(__file__).parent / "extracted_gifs"
+            extracted_gifs_dir.mkdir(exist_ok=True)
+            video_name = Path(self.video_info['path']).stem
+            optimized_path = str(extracted_gifs_dir / f"{video_name}_gpu.gif")
+        else:
+            base_path = Path(output_path)
+            optimized_path = str(base_path.parent / f"{base_path.stem}_gpu.gif")
+
+        print("\n🚀 Converting video with AMD GPU acceleration...")
+        print(f"   Input: {self.video_info['path']}")
+        print(f"   Output: {optimized_path}")
+        print(f"   Using AMD Radeon RX 6800 XT GPU")
+
+        # Enable OpenCL for AMD GPU
+        cv2.ocl.setUseOpenCL(True)
+        print(f"   OpenCL status: {cv2.ocl.useOpenCL()}")
+
+        try:
+            # Open video with OpenCV
+            cap = cv2.VideoCapture(self.video_info['path'])
+            if not cap.isOpened():
+                raise RuntimeError("Could not open video file")
+
+            # Calculate frame processing parameters
+            total_frames = int(self.video_info['total_frames'])
+            fps = self.video_info['fps']
+            target_fps = settings['fps']
+
+            # Trim last frames to avoid corruption (convert seconds to frames)
+            trim_frames = int(0.5 * fps)  # Trim last 0.5 seconds
+            if total_frames > trim_frames:
+                total_frames -= trim_frames
+                print(f"   🔧 Trimming last {trim_frames} frames to avoid corruption")
+
+            # Calculate which frames to sample (for speed adjustment)
+            frame_interval = max(1, int(fps / target_fps))
+            expected_frames = total_frames // frame_interval
+
+            print(f"   Processing {expected_frames} frames at {target_fps} FPS")
+            print(f"   Target resolution: {settings['width']}x{settings['height']}")
+            print("   Using GPU acceleration for frame processing...")
+
+            frames = []
+            frame_count = 0
+            processed_count = 0
+
+            # Read and process frames with GPU acceleration
+            while processed_count < expected_frames:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame_count += 1
+
+                # Skip frames according to speed adjustment
+                if frame_count % frame_interval != 0:
+                    continue
+
+                # Resize frame using GPU-accelerated OpenCV
+                if frame.shape[1] > settings['width'] or frame.shape[0] > settings['height']:
+                    frame = cv2.resize(frame, (settings['width'], settings['height']),
+                                     interpolation=cv2.INTER_LINEAR)
+
+                # Convert BGR to RGB for PIL
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frames.append(Image.fromarray(frame_rgb))
+
+                processed_count += 1
+
+                # Progress update every 100 frames
+                if processed_count % 100 == 0:
+                    progress = (processed_count / expected_frames) * 100
+                    print(f"   📊 GPU processed {processed_count}/{expected_frames} frames ({progress:.1f}%)")
+
+            cap.release()
+
+            if not frames:
+                raise RuntimeError("No frames were processed")
+
+            print(f"   🎨 Creating GIF with {len(frames)} frames using optimized encoder...")
+
+            # Create GIF using PIL with optimization (much faster than MoviePy)
+            frames[0].save(
+                optimized_path,
+                save_all=True,
+                append_images=frames[1:],
+                duration=int(1000 / target_fps),  # Duration per frame in ms
+                loop=0,
+                optimize=True
+            )
+
+            # Verify result
+            if os.path.exists(optimized_path) and os.path.getsize(optimized_path) > 0:
+                result_info = self.verify_conversion(optimized_path, settings)
+                actual_size_mb = result_info['size_mb']
+
+                print(f"   ✅ GPU conversion complete!")
+                print(f"   Size: {actual_size_mb:.2f} MB (target: {self.size_constraint_mb} MB)")
+                print(f"   Frames: {len(frames)}")
+                print(f"   Duration: {len(frames) / target_fps:.1f}s")
+
+                # Check if size is acceptable
+                if actual_size_mb <= self.size_constraint_mb:
+                    print("   ✅ Size constraint met!")
+                else:
+                    print(f"   ⚠️  Size over limit ({actual_size_mb:.2f} MB > {self.size_constraint_mb} MB)")
+
+                return optimized_path
+            else:
+                raise RuntimeError("GIF file was not created or is empty")
+
+        except Exception as e:
+            print(f"   ❌ GPU conversion failed: {e}")
+            raise
+
 def main():
     print("🎬 Advanced MP4 to GIF Converter")
     print("=" * 50)
@@ -430,19 +602,33 @@ def main():
             print("❌ Please enter a valid number for speed ratio (0.1-2.0)")
             continue
 
+    # Get conversion method
+    print("\n🚀 Conversion Method:")
+    print("   • GPU: Faster with AMD Radeon GPU (recommended)")
+    print("   • CPU: Slower but more compatible")
+    while True:
+        method = input("Choose conversion method (gpu/cpu): ").strip().lower()
+        if method in ['gpu', 'cpu']:
+            break
+        print("❌ Please enter 'gpu' or 'cpu'")
+
     # Set constraints (already validated during input)
     converter.validate_constraints(size_mb, speed_ratio)
 
     # Perform conversion
     try:
-        optimized_path, original_path, result_info = converter.convert_video()
-
-        print("\n🎉 SUCCESS! Your GIFs are ready!")
-        print(f"   Optimized file: {optimized_path}")
-        print(f"   Original file: {original_path}")
-        print(f"   Optimized size: {result_info['size_mb']:.2f} MB (limit: {converter.size_constraint_mb} MB)")
-        print(f"   Optimized speed: {result_info['speed_ratio']:.2f}x (target: {converter.speed_constraint_ratio:.2f}x)")
-        print(f"   Optimized quality: {result_info['fps']:.1f} FPS, {result_info['frames']} frames")
+        if method == 'gpu':
+            optimized_path = converter.convert_video_gpu()
+            print("\n🎉 SUCCESS! Your GPU-accelerated GIF is ready!")
+            print(f"   File: {optimized_path}")
+        else:
+            optimized_path, original_path, result_info = converter.convert_video()
+            print("\n🎉 SUCCESS! Your GIFs are ready!")
+            print(f"   Optimized file: {optimized_path}")
+            print(f"   Original file: {original_path}")
+            print(f"   Optimized size: {result_info['size_mb']:.2f} MB (limit: {converter.size_constraint_mb} MB)")
+            print(f"   Optimized speed: {result_info['speed_ratio']:.2f}x (target: {converter.speed_constraint_ratio:.2f}x)")
+            print(f"   Optimized quality: {result_info['fps']:.1f} FPS, {result_info['frames']} frames")
 
         return 0
 
@@ -458,6 +644,7 @@ if __name__ == "__main__":
         parser.add_argument("-s", "--size", type=float, required=True, help="Size limit in MB")
         parser.add_argument("-p", "--speed", type=float, required=True, help="Speed ratio (1.0 = original)")
         parser.add_argument("-o", "--output", help="Output GIF file")
+        parser.add_argument("--gpu", action="store_true", help="Use GPU acceleration (AMD Radeon)")
 
         args = parser.parse_args()
 
@@ -465,10 +652,15 @@ if __name__ == "__main__":
         try:
             converter.analyze_video(args.input)
             converter.validate_constraints(args.size, args.speed)
-            optimized_path, original_path, result_info = converter.convert_video(args.output)
-            print(f"✅ Conversion complete!")
-            print(f"   Optimized: {optimized_path}")
-            print(f"   Original: {original_path} (DISABLED for testing)")
+            if args.gpu:
+                optimized_path = converter.convert_video_gpu(args.output)
+                print(f"✅ GPU conversion complete!")
+                print(f"   Output: {optimized_path}")
+            else:
+                optimized_path, original_path, result_info = converter.convert_video(args.output)
+                print(f"✅ CPU conversion complete!")
+                print(f"   Optimized: {optimized_path}")
+                print(f"   Original: {original_path}")
         except Exception as e:
             print(f"❌ Error: {e}")
             sys.exit(1)

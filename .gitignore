@@ -1,3 +1,6 @@
+# Test folders
+test/
+
 # Output folders
 **/output/
 **/output_*/
