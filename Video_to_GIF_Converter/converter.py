@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import argparse
+from moviepy import VideoFileClip, VideoClip
 
 class GIFConverter:
     def __init__(self):
@@ -148,11 +149,13 @@ class GIFConverter:
         scale_factor = math.sqrt(pixels_per_frame / original_pixels_per_frame)
         scale_factor = max(0.1, min(1.0, scale_factor))  # Clamp between 10% and 100%
 
-        # For small size targets, force more aggressive scaling
-        if self.size_constraint_mb <= 10:
-            scale_factor = min(scale_factor, 0.15)  # Force smaller scale for ≤10MB targets
+        # For small size targets, start more conservatively to allow optimization to work up
+        if self.size_constraint_mb <= 5:
+            scale_factor = min(scale_factor, 0.08)  # Start very small for ≤5MB, can optimize up
+        elif self.size_constraint_mb <= 10:
+            scale_factor = min(scale_factor, 0.12)  # Start small for ≤10MB, can optimize up
         elif self.size_constraint_mb <= 20:
-            scale_factor = min(scale_factor, 0.25)  # Force smaller scale for ≤20MB targets
+            scale_factor = min(scale_factor, 0.18)  # Start moderate for ≤20MB, can optimize up
 
         target_width = int(original_width * scale_factor)
         target_height = int(original_height * scale_factor)
@@ -233,23 +236,25 @@ class GIFConverter:
             trim_duration = 0.5  # Trim last 0.5 seconds to avoid frame reading issues
             if self.video_info['duration'] > trim_duration:
                 print(f"   🔧 Trimming last {trim_duration}s to avoid corrupted frames...")
-                clip = mp.VideoFileClip(self.video_info['path']).subclip(0, self.video_info['duration'] - trim_duration)
+                full_clip = VideoFileClip(self.video_info['path'])
+                clip = full_clip[0:self.video_info['duration'] - trim_duration]
                 print(f"   New duration: {clip.duration:.2f}s (was {self.video_info['duration']:.2f}s)")
             else:
-                clip = mp.VideoFileClip(self.video_info['path'])
+                clip = VideoFileClip(self.video_info['path'])
                 print("   ⚠️  Video too short to trim, proceeding with full video")
 
             original_clip = clip.copy()  # Keep original for second conversion
 
-            # ITERATIVE APPROACH: Keep reducing resolution until size is under limit
+            # ITERATIVE APPROACH: Keep adjusting resolution until size is optimal
             current_settings = settings.copy()
             iteration = 0
-            max_iterations = 5
+            max_iterations = 8  # Increased from 5 to allow more optimization attempts
             original_fps = self.video_info['fps']  # Store original FPS for speed adjustments
 
             while iteration < max_iterations:
                 iteration += 1
-                print(f"\n📏 Creating optimized version (attempt {iteration})...")
+                print(f"\n📏 Creating optimized version (attempt {iteration}/{max_iterations})...")
+                print(f"   Current settings: {current_settings['width']}x{current_settings['height']} at {current_settings['fps']} FPS")
 
                 # Create a fresh copy for each attempt
                 opt_clip = clip.copy()
@@ -289,36 +294,81 @@ class GIFConverter:
 
                 print(f"   Attempt {iteration} result: {actual_size_mb:.2f} MB (target: {self.size_constraint_mb} MB)")
 
-                # If we're within limit and not too far below target, accept
-                undershoot_threshold = 0.95  # accept if >= 95% of target
-                if actual_size_mb <= self.size_constraint_mb and actual_size_mb >= self.size_constraint_mb * undershoot_threshold:
-                    print(f"   ✅ Size constraint met on attempt {iteration} within acceptable undershoot ({actual_size_mb:.2f} MB)")
+                # More aggressive optimization to hit target size
+                target_size = self.size_constraint_mb
+                size_ratio = actual_size_mb / target_size
+
+                print(f"   DEBUG: target_size={target_size}, actual_size_mb={actual_size_mb}, size_ratio={size_ratio}")
+
+                # More lenient acceptance based on target size
+                # For small targets (<5MB), accept 80-120% range
+                # For larger targets, accept 70-130% range
+                if self.size_constraint_mb < 5:
+                    min_ratio, max_ratio = 0.8, 1.2
+                else:
+                    min_ratio, max_ratio = 0.7, 1.3
+
+                print(f"   DEBUG: min_ratio={min_ratio}, max_ratio={max_ratio}, condition={min_ratio <= size_ratio <= max_ratio}")
+
+                if min_ratio <= size_ratio <= max_ratio:
+                    if actual_size_mb <= target_size:
+                        print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≈ {target_size} MB target)")
+                    else:
+                        print(f"   ⚠️  Slightly over limit but acceptable ({actual_size_mb:.2f} MB vs {target_size} MB target)")
                     break
 
-                # If under target but too small (undershoot), try increasing resolution moderately
-                if actual_size_mb < self.size_constraint_mb * undershoot_threshold and iteration < max_iterations:
-                    # Increase resolution by 25% to get closer to target without exceeding
-                    increase_factor = 1.25
-                    # Cap at original video resolution
+                # If significantly undershot (>30% below target), increase resolution aggressively
+                if size_ratio < 0.7 and iteration < max_iterations:
+                    increase_factor = 2.0  # Very aggressive increase
                     current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
                     current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
-                    print(f"   🔧 Undershot target by >5%, increasing resolution to {current_settings['width']}x{current_settings['height']} for next attempt...")
+                    print(f"   📈 Way undershot ({actual_size_mb:.2f} MB), doubling resolution to {current_settings['width']}x{current_settings['height']}...")
 
-                    # Remove the small file before next attempt
-                    if os.path.exists(optimized_path):
-                        os.remove(optimized_path)
-                    continue
+                # If moderately undershot (20-30% below target), increase resolution significantly
+                elif 0.7 <= size_ratio < 0.8 and iteration < max_iterations:
+                    increase_factor = 1.6  # Significant increase
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   📈 Moderately undershot ({actual_size_mb:.2f} MB), increasing resolution to {current_settings['width']}x{current_settings['height']}...")
 
-                # If over limit and not last iteration, reduce resolution
-                if actual_size_mb > self.size_constraint_mb and iteration < max_iterations:
-                    reduction_factor = 0.8
+                # If slightly undershot (10-20% below target), increase resolution moderately
+                elif 0.8 <= size_ratio < 0.9 and iteration < max_iterations:
+                    increase_factor = 1.3  # Moderate increase
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   🔧 Slightly undershot ({actual_size_mb:.2f} MB), increasing resolution to {current_settings['width']}x{current_settings['height']}...")
+
+                # If slightly undershot (<10% below target), accept it
+                elif 0.9 <= size_ratio < 1.0:
+                    print(f"   ✅ Close enough to target ({actual_size_mb:.2f} MB vs {target_size} MB), accepting result")
+                    break
+
+                # If over limit, reduce resolution
+                elif size_ratio > 1.0 and iteration < max_iterations:
+                    # Calculate how much to reduce based on overshoot amount
+                    overshoot_ratio = actual_size_mb / target_size
+                    if overshoot_ratio > 1.5:  # Way over (>50% overshoot)
+                        reduction_factor = 0.6
+                    elif overshoot_ratio > 1.2:  # Moderately over (20-50% overshoot)
+                        reduction_factor = 0.75
+                    else:  # Slightly over (<20% overshoot)
+                        reduction_factor = 0.85
+
                     current_settings['width'] = max(40, int(current_settings['width'] * reduction_factor))
                     current_settings['height'] = max(22, int(current_settings['height'] * reduction_factor))
-                    print(f"   ⚠️  Size over limit, reducing resolution to {current_settings['width']}x{current_settings['height']} for next attempt...")
+                    print(f"   ⚠️  Over limit ({actual_size_mb:.2f} MB), reducing resolution to {current_settings['width']}x{current_settings['height']}...")
 
-                    # Remove the oversized file
-                    if os.path.exists(optimized_path):
-                        os.remove(optimized_path)
+                else:
+                    # Max iterations reached or no more adjustments possible
+                    if actual_size_mb > target_size:
+                        print(f"   ⚠️  Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (over {target_size} MB limit)")
+                    else:
+                        print(f"   ✅ Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (under {target_size} MB limit)")
+                    break
+
+                # Clean up current file before next attempt
+                if os.path.exists(optimized_path):
+                    os.remove(optimized_path)
                 else:
                     # Either we reached acceptable size or max iterations
                     if actual_size_mb > self.size_constraint_mb:
@@ -442,103 +492,207 @@ class GIFConverter:
         cv2.ocl.setUseOpenCL(True)
         print(f"   OpenCL status: {cv2.ocl.useOpenCL()}")
 
-        try:
-            # Open video with OpenCV
-            cap = cv2.VideoCapture(self.video_info['path'])
-            if not cap.isOpened():
-                raise RuntimeError("Could not open video file")
+        # ITERATIVE APPROACH: Keep adjusting resolution until size is optimal
+        current_settings = settings.copy()
+        iteration = 0
+        max_iterations = 8  # Same as CPU method
 
-            # Calculate frame processing parameters
-            total_frames = int(self.video_info['total_frames'])
-            fps = self.video_info['fps']
-            target_fps = settings['fps']
+        while iteration < max_iterations:
+            iteration += 1
+            print(f"\n📏 Creating GPU optimized version (attempt {iteration}/{max_iterations})...")
+            print(f"   Current settings: {current_settings['width']}x{current_settings['height']} at {current_settings['fps']} FPS")
 
-            # Trim last frames to avoid corruption (convert seconds to frames)
-            trim_frames = int(0.5 * fps)  # Trim last 0.5 seconds
-            if total_frames > trim_frames:
-                total_frames -= trim_frames
-                print(f"   🔧 Trimming last {trim_frames} frames to avoid corruption")
+            try:
+                # Open video with OpenCV
+                cap = cv2.VideoCapture(self.video_info['path'])
+                if not cap.isOpened():
+                    raise RuntimeError("Could not open video file")
 
-            # Calculate which frames to sample (for speed adjustment)
-            frame_interval = max(1, int(fps / target_fps))
-            expected_frames = total_frames // frame_interval
+                # Calculate frame processing parameters
+                total_frames = int(self.video_info['total_frames'])
+                fps = self.video_info['fps']
+                target_fps = current_settings['fps']
 
-            print(f"   Processing {expected_frames} frames at {target_fps} FPS")
-            print(f"   Target resolution: {settings['width']}x{settings['height']}")
-            print("   Using GPU acceleration for frame processing...")
+                # Trim last frames to avoid corruption (convert seconds to frames)
+                trim_frames = int(0.5 * fps)  # Trim last 0.5 seconds
+                if total_frames > trim_frames:
+                    total_frames -= trim_frames
+                    print(f"   🔧 Trimming last {trim_frames} frames to avoid corruption")
 
-            frames = []
-            frame_count = 0
-            processed_count = 0
+                # Calculate which frames to sample (for speed adjustment)
+                frame_interval = max(1, int(fps / target_fps))
+                expected_frames = total_frames // frame_interval
 
-            # Read and process frames with GPU acceleration
-            while processed_count < expected_frames:
-                ret, frame = cap.read()
-                if not ret:
-                    break
+                print(f"   Processing {expected_frames} frames at {target_fps} FPS")
+                print(f"   Target resolution: {current_settings['width']}x{current_settings['height']}")
+                print("   Using GPU acceleration for frame processing...")
 
-                frame_count += 1
+                frames = []
+                frame_count = 0
+                processed_count = 0
 
-                # Skip frames according to speed adjustment
-                if frame_count % frame_interval != 0:
+                # Read and process frames with GPU acceleration
+                while processed_count < expected_frames:
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+
+                    frame_count += 1
+
+                    # Skip frames according to speed adjustment
+                    if frame_count % frame_interval != 0:
+                        continue
+
+                    # Resize frame using GPU-accelerated OpenCV with high-quality interpolation
+                    if frame.shape[1] > current_settings['width'] or frame.shape[0] > current_settings['height']:
+                        frame = cv2.resize(frame, (current_settings['width'], current_settings['height']),
+                                         interpolation=cv2.INTER_CUBIC)  # Higher quality than LINEAR
+
+                    # Convert BGR to RGB for PIL
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frames.append(Image.fromarray(frame_rgb))
+
+                    processed_count += 1
+
+                    # Progress update every 100 frames
+                    if processed_count % 100 == 0:
+                        progress = (processed_count / expected_frames) * 100
+                        print(f"   📊 GPU processed {processed_count}/{expected_frames} frames ({progress:.1f}%)")
+
+                cap.release()
+
+                if not frames:
+                    raise RuntimeError("No frames were processed")
+
+                print(f"   🎨 Creating GIF with {len(frames)} frames using MoviePy encoder...")
+
+                # Convert frames to numpy arrays for MoviePy
+                frame_arrays = []
+                for frame_pil in frames:
+                    # Convert PIL to numpy array (RGB)
+                    frame_np = np.array(frame_pil)
+                    frame_arrays.append(frame_np)
+
+                # Create MoviePy clip from frame arrays for high-quality GIF encoding
+                def make_frame(t):
+                    frame_index = min(int(t * target_fps), len(frame_arrays) - 1)
+                    return frame_arrays[frame_index]
+
+                duration = len(frame_arrays) / target_fps
+                clip = VideoClip(make_frame, duration=duration)
+
+                # Use MoviePy's high-quality GIF encoding
+                clip.write_gif(optimized_path, fps=target_fps)
+                clip.close()
+
+                # Verify result
+                if not os.path.exists(optimized_path) or os.path.getsize(optimized_path) == 0:
+                    print(f"   ❌ Empty or missing output file after conversion")
                     continue
 
-                # Resize frame using GPU-accelerated OpenCV
-                if frame.shape[1] > settings['width'] or frame.shape[0] > settings['height']:
-                    frame = cv2.resize(frame, (settings['width'], settings['height']),
-                                     interpolation=cv2.INTER_LINEAR)
-
-                # Convert BGR to RGB for PIL
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frames.append(Image.fromarray(frame_rgb))
-
-                processed_count += 1
-
-                # Progress update every 100 frames
-                if processed_count % 100 == 0:
-                    progress = (processed_count / expected_frames) * 100
-                    print(f"   📊 GPU processed {processed_count}/{expected_frames} frames ({progress:.1f}%)")
-
-            cap.release()
-
-            if not frames:
-                raise RuntimeError("No frames were processed")
-
-            print(f"   🎨 Creating GIF with {len(frames)} frames using optimized encoder...")
-
-            # Create GIF using PIL with optimization (much faster than MoviePy)
-            frames[0].save(
-                optimized_path,
-                save_all=True,
-                append_images=frames[1:],
-                duration=int(1000 / target_fps),  # Duration per frame in ms
-                loop=0,
-                optimize=True
-            )
-
-            # Verify result
-            if os.path.exists(optimized_path) and os.path.getsize(optimized_path) > 0:
-                result_info = self.verify_conversion(optimized_path, settings)
+                result_info = self.verify_conversion(optimized_path, current_settings)
                 actual_size_mb = result_info['size_mb']
 
-                print(f"   ✅ GPU conversion complete!")
-                print(f"   Size: {actual_size_mb:.2f} MB (target: {self.size_constraint_mb} MB)")
-                print(f"   Frames: {len(frames)}")
-                print(f"   Duration: {len(frames) / target_fps:.1f}s")
+                print(f"   Attempt {iteration} result: {actual_size_mb:.2f} MB (target: {self.size_constraint_mb} MB)")
 
-                # Check if size is acceptable
-                if actual_size_mb <= self.size_constraint_mb:
-                    print("   ✅ Size constraint met!")
+                # More aggressive optimization to hit target size
+                target_size = self.size_constraint_mb
+                size_ratio = actual_size_mb / target_size
+
+                print(f"   DEBUG: target_size={target_size}, actual_size_mb={actual_size_mb}, size_ratio={size_ratio}")
+
+                # More lenient acceptance based on target size
+                # For small targets (<5MB), accept 80-120% range
+                # For larger targets, accept 70-130% range
+                if self.size_constraint_mb < 5:
+                    min_ratio, max_ratio = 0.8, 1.2
                 else:
-                    print(f"   ⚠️  Size over limit ({actual_size_mb:.2f} MB > {self.size_constraint_mb} MB)")
+                    min_ratio, max_ratio = 0.7, 1.3
 
-                return optimized_path
-            else:
-                raise RuntimeError("GIF file was not created or is empty")
+                print(f"   DEBUG: min_ratio={min_ratio}, max_ratio={max_ratio}, condition={min_ratio <= size_ratio <= max_ratio}")
 
-        except Exception as e:
-            print(f"   ❌ GPU conversion failed: {e}")
-            raise
+                if min_ratio <= size_ratio <= max_ratio:
+                    if actual_size_mb <= target_size:
+                        print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≈ {target_size} MB target)")
+                    else:
+                        print(f"   ⚠️  Slightly over limit but acceptable ({actual_size_mb:.2f} MB vs {target_size} MB target)")
+                    break
+
+                # If significantly undershot (>30% below target), increase resolution aggressively
+                if size_ratio < 0.7 and iteration < max_iterations:
+                    increase_factor = 2.0  # Very aggressive increase
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   📈 Way undershot ({actual_size_mb:.2f} MB), doubling resolution to {current_settings['width']}x{current_settings['height']}...")
+
+                # If moderately undershot (20-30% below target), increase resolution significantly
+                elif 0.7 <= size_ratio < 0.8 and iteration < max_iterations:
+                    increase_factor = 1.6  # Significant increase
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   📈 Moderately undershot ({actual_size_mb:.2f} MB), increasing resolution to {current_settings['width']}x{current_settings['height']}...")
+
+                # If slightly undershot (10-20% below target), increase resolution moderately
+                elif 0.8 <= size_ratio < 0.9 and iteration < max_iterations:
+                    increase_factor = 1.3  # Moderate increase
+                    current_settings['width'] = min(self.video_info['width'], int(current_settings['width'] * increase_factor))
+                    current_settings['height'] = min(self.video_info['height'], int(current_settings['height'] * increase_factor))
+                    print(f"   🔧 Slightly undershot ({actual_size_mb:.2f} MB), increasing resolution to {current_settings['width']}x{current_settings['height']}...")
+
+                # If slightly undershot (<10% below target), accept it
+                elif 0.9 <= size_ratio < 1.0:
+                    print(f"   ✅ Close enough to target ({actual_size_mb:.2f} MB vs {target_size} MB), accepting result")
+                    break
+
+                # If over limit, reduce resolution
+                elif size_ratio > 1.0 and iteration < max_iterations:
+                    # Calculate how much to reduce based on overshoot amount
+                    overshoot_ratio = actual_size_mb / target_size
+                    if overshoot_ratio > 1.5:  # Way over (>50% overshoot)
+                        reduction_factor = 0.6
+                    elif overshoot_ratio > 1.2:  # Moderately over (20-50% overshoot)
+                        reduction_factor = 0.75
+                    else:  # Slightly over (<20% overshoot)
+                        reduction_factor = 0.85
+
+                    current_settings['width'] = max(40, int(current_settings['width'] * reduction_factor))
+                    current_settings['height'] = max(22, int(current_settings['height'] * reduction_factor))
+                    print(f"   ⚠️  Over limit ({actual_size_mb:.2f} MB), reducing resolution to {current_settings['width']}x{current_settings['height']}...")
+
+                else:
+                    # Max iterations reached or no more adjustments possible
+                    if actual_size_mb > target_size:
+                        print(f"   ⚠️  Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (over {target_size} MB limit)")
+                    else:
+                        print(f"   ✅ Maximum iterations reached. Final size: {actual_size_mb:.2f} MB (under {target_size} MB limit)")
+                    break
+
+                # Clean up current file before next attempt
+                if os.path.exists(optimized_path):
+                    os.remove(optimized_path)
+
+            except Exception as e:
+                print(f"   ❌ GPU conversion failed on attempt {iteration}: {e}")
+                if iteration >= max_iterations:
+                    raise
+                continue
+
+        # Final verification and results
+        final_result = self.verify_conversion(optimized_path, current_settings)
+
+        print(f"   ✅ GPU conversion complete!")
+        print(f"   Size: {final_result['size_mb']:.2f} MB (target: {self.size_constraint_mb} MB)")
+        print(f"   Frames: {final_result['frames']}")
+        print(f"   Duration: {final_result['duration']:.1f}s")
+        print(f"   Final resolution: {current_settings['width']}x{current_settings['height']}")
+
+        # Check final constraints
+        if final_result['size_mb'] > self.size_constraint_mb:
+            print(f"   ⚠️  Size still over limit: {final_result['size_mb']:.2f} > {self.size_constraint_mb} MB")
+        else:
+            print(f"   ✅ Size constraint met: {final_result['size_mb']:.2f} ≤ {self.size_constraint_mb} MB")
+
+        return optimized_path
 
 def main():
     print("🎬 Advanced MP4 to GIF Converter")
