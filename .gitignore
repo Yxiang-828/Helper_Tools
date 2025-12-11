@@ -49,9 +49,10 @@ Thumbs.db
 # Logs
 *.log
 
-# S&B Extractor
-S&B_Extractor/
-extractSnB.bat
+# S&B Extractor - exclude output folders, keep scripts
+S&B_Extractor/complete_ui_extraction/
+S&B_Extractor/new_extractions/
+S&B_Extractor/alene_extraction/
 
 # File Scanner - auto-generated files with personal paths
 File_Scanner/delete_top_media.ps1

@@ -83,8 +83,12 @@ def categorize_ui_file(filename):
     else:
         return "Other"
 
-def extract_ui_images(source_dir, output_base_dir, folder_name, new_extractions_dir, timestamp_folder):
-    """Extract images from a UI source directory with duplicate checking"""
+def extract_ui_images(source_dir, output_base_dir, folder_name, new_extractions_dir, timestamp_folder, force_overwrite=False):
+    """Extract images from a UI source directory with duplicate checking
+    
+    Args:
+        force_overwrite: If True, overwrite existing files (useful for dragon2019 updated content)
+    """
     print(f"\n=== Processing {folder_name} ===")
     
     unity_files = glob.glob(os.path.join(source_dir, "*.unity3d"))
@@ -161,11 +165,12 @@ def extract_ui_images(source_dir, output_base_dir, folder_name, new_extractions_
                             new_output_path = os.path.join(category_new_dir, final_filename)
                             
                             # Check if file already exists in complete_ui_extraction
-                            if os.path.exists(output_path):
+                            # If force_overwrite is True (dragon2019), always extract/update
+                            if os.path.exists(output_path) and not force_overwrite:
                                 skipped_count += 1
                                 continue
                             
-                            # Save to both locations if it's new
+                            # Save to both locations if it's new or force_overwrite
                             img.save(output_path)
                             img.save(new_output_path)
                             extracted_count += 1
@@ -194,7 +199,12 @@ def extract_ui_images(source_dir, output_base_dir, folder_name, new_extractions_
                 print(f"  [{i}/{total_files}] - {filename} (all {skipped_count} already exist)")
             
         except Exception as e:
-            print(f"  [{i}/{total_files}] ✗ {filename} - Error: {e}")
+            # Silently skip decompression errors (common for incomplete dragon2019 downloads)
+            error_str = str(e).lower()
+            if "decompression" in error_str or "corrupt" in error_str:
+                print(f"  [{i}/{total_files}] ⚠ {filename} (incomplete/corrupted - skipped)")
+            else:
+                print(f"  [{i}/{total_files}] ✗ {filename} - Error: {e}")
             continue
     
     print(f"\n{folder_name} Summary:")
@@ -209,6 +219,9 @@ def main():
     # Define source directories
     ui_dir = r"C:\Program Files (x86)\Silver And Blood\SilverAndBlood\SilverAndBlood_Data\StreamingAssets\UI"
     hq_ui_dir = r"C:\Program Files (x86)\Silver And Blood\SilverAndBlood\SilverAndBlood_Data\StreamingAssets\HQ\UI"
+    # Dragon2019 folders (where downloaded/updated content goes)
+    dragon_ui_dir = r"C:\Program Files (x86)\Silver And Blood\SilverAndBlood\SilverAndBlood_Data\dragon2019\assets\UI"
+    dragon_hq_ui_dir = r"C:\Program Files (x86)\Silver And Blood\SilverAndBlood\SilverAndBlood_Data\dragon2019\assets\HQ\UI"
     
     # Define output directories dynamically based on script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -230,13 +243,10 @@ def main():
     total_new_images = 0
     all_category_stats = {}
     
-    # Extract from regular UI folder
-    if os.path.exists(ui_dir):
-        ui_total, ui_new, ui_stats = extract_ui_images(ui_dir, output_dir, "Standard_UI", new_extractions_dir, timestamp_folder)
-        total_images += ui_total
-        total_new_images += ui_new
-        
-        for category, stats in ui_stats.items():
+    # Helper function to merge stats
+    def merge_stats(source_stats):
+        nonlocal total_images, total_new_images
+        for category, stats in source_stats.items():
             if category not in all_category_stats:
                 all_category_stats[category] = {"files": 0, "images": 0, "new_images": 0, "skipped": 0}
             all_category_stats[category]["files"] += stats["files"]
@@ -244,19 +254,32 @@ def main():
             all_category_stats[category]["new_images"] += stats["new_images"]
             all_category_stats[category]["skipped"] += stats["skipped"]
     
-    # Extract from HQ UI folder
+    # Process Dragon2019 folders FIRST (newer/downloaded content takes priority)
+    # This way StreamingAssets will skip files that already exist from dragon2019
+    if os.path.exists(dragon_ui_dir):
+        dragon_total, dragon_new, dragon_stats = extract_ui_images(dragon_ui_dir, output_dir, "Dragon2019_UI", new_extractions_dir, timestamp_folder)
+        total_images += dragon_total
+        total_new_images += dragon_new
+        merge_stats(dragon_stats)
+    
+    if os.path.exists(dragon_hq_ui_dir):
+        dragon_hq_total, dragon_hq_new, dragon_hq_stats = extract_ui_images(dragon_hq_ui_dir, output_dir, "Dragon2019_HQ_UI", new_extractions_dir, timestamp_folder)
+        total_images += dragon_hq_total
+        total_new_images += dragon_hq_new
+        merge_stats(dragon_hq_stats)
+    
+    # Then process StreamingAssets folders (will skip duplicates already extracted from dragon2019)
+    if os.path.exists(ui_dir):
+        ui_total, ui_new, ui_stats = extract_ui_images(ui_dir, output_dir, "Standard_UI", new_extractions_dir, timestamp_folder)
+        total_images += ui_total
+        total_new_images += ui_new
+        merge_stats(ui_stats)
+    
     if os.path.exists(hq_ui_dir):
         hq_total, hq_new, hq_stats = extract_ui_images(hq_ui_dir, output_dir, "HQ_UI", new_extractions_dir, timestamp_folder)
         total_images += hq_total
         total_new_images += hq_new
-        
-        for category, stats in hq_stats.items():
-            if category not in all_category_stats:
-                all_category_stats[category] = {"files": 0, "images": 0, "new_images": 0, "skipped": 0}
-            all_category_stats[category]["files"] += stats["files"]
-            all_category_stats[category]["images"] += stats["images"]
-            all_category_stats[category]["new_images"] += stats["new_images"]
-            all_category_stats[category]["skipped"] += stats["skipped"]
+        merge_stats(hq_stats)
     
     print("\n" + "="*80)
     print("FINAL EXTRACTION SUMMARY")
