@@ -23,10 +23,10 @@ cd /d "%~dp0"
 REM Check if arguments were provided
 if "%~1"=="" (
     echo No arguments provided. Running in interactive mode...
-    py "Video_to_GIF_Converter/converter.py"
+    python "Video_to_GIF_Converter/converter.py"
 ) else (
     echo Running with provided arguments...
-    py "Video_to_GIF_Converter/converter.py" "%~1" -s %2 -p %3
+    python "Video_to_GIF_Converter/converter.py" "%~1" -s %2 -p %3
 )
 
 echo.

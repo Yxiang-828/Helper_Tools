@@ -300,21 +300,18 @@ class GIFConverter:
 
                 print(f"   DEBUG: target_size={target_size}, actual_size_mb={actual_size_mb}, size_ratio={size_ratio}")
 
-                # More lenient acceptance based on target size
-                # For small targets (<5MB), accept 80-120% range
-                # For larger targets, accept 70-130% range
+                # Strict acceptance: must be under target size
+                # For small targets (<5MB), accept 80-100% range
+                # For larger targets, accept 70-100% range
                 if self.size_constraint_mb < 5:
-                    min_ratio, max_ratio = 0.8, 1.2
+                    min_ratio, max_ratio = 0.8, 1.0
                 else:
-                    min_ratio, max_ratio = 0.7, 1.3
+                    min_ratio, max_ratio = 0.7, 1.0
 
                 print(f"   DEBUG: min_ratio={min_ratio}, max_ratio={max_ratio}, condition={min_ratio <= size_ratio <= max_ratio}")
 
                 if min_ratio <= size_ratio <= max_ratio:
-                    if actual_size_mb <= target_size:
-                        print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≈ {target_size} MB target)")
-                    else:
-                        print(f"   ⚠️  Slightly over limit but acceptable ({actual_size_mb:.2f} MB vs {target_size} MB target)")
+                    print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≤ {target_size} MB target)")
                     break
 
                 # If significantly undershot (>30% below target), increase resolution aggressively
@@ -601,21 +598,18 @@ class GIFConverter:
 
                 print(f"   DEBUG: target_size={target_size}, actual_size_mb={actual_size_mb}, size_ratio={size_ratio}")
 
-                # More lenient acceptance based on target size
-                # For small targets (<5MB), accept 80-120% range
-                # For larger targets, accept 70-130% range
+                # Strict acceptance: must be under target size
+                # For small targets (<5MB), accept 80-100% range
+                # For larger targets, accept 70-100% range
                 if self.size_constraint_mb < 5:
-                    min_ratio, max_ratio = 0.8, 1.2
+                    min_ratio, max_ratio = 0.8, 1.0
                 else:
-                    min_ratio, max_ratio = 0.7, 1.3
+                    min_ratio, max_ratio = 0.7, 1.0
 
                 print(f"   DEBUG: min_ratio={min_ratio}, max_ratio={max_ratio}, condition={min_ratio <= size_ratio <= max_ratio}")
 
                 if min_ratio <= size_ratio <= max_ratio:
-                    if actual_size_mb <= target_size:
-                        print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≈ {target_size} MB target)")
-                    else:
-                        print(f"   ⚠️  Slightly over limit but acceptable ({actual_size_mb:.2f} MB vs {target_size} MB target)")
+                    print(f"   ✅ Size constraint met on attempt {iteration} ({actual_size_mb:.2f} MB ≤ {target_size} MB target)")
                     break
 
                 # If significantly undershot (>30% below target), increase resolution aggressively

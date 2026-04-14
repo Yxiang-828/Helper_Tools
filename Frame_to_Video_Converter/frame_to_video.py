@@ -27,6 +27,10 @@ class FrameConverter:
 
         self.frame_files = []
         for file in os.listdir(folder_path):
+            # content check: skip files with " copy" in the name to avoid duplicates
+            if " copy" in file:
+                continue
+                
             if any(file.lower().endswith(ext) for ext in extensions):
                 self.frame_files.append(os.path.join(folder_path, file))
 
@@ -145,7 +149,8 @@ class FrameConverter:
             append_images=frames[1:],
             duration=duration_ms,
             loop=0,
-            optimize=True
+            optimize=False,
+            disposal=2  # Restore to background color (clears previous frame)
         )
 
         print(f"   ✅ GIF created successfully! ({len(frames)} frames)")

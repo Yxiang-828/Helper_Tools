@@ -1,0 +1,24 @@
+{
+    "_meta_tag": "_CharacterPrefabData_",
+    "action_count": 18,
+    "actions": {
+        "Array": 2.0999999046325684,
+        "ArrayIdle": 2.0,
+        "Attack01": 1.899999976158142,
+        "Attack02": 1.899999976158142,
+        "Die": 2.0999999046325684,
+        "Hit": 1.0,
+        "Hit_Knock": 1.0,
+        "Hit_KnockBack": 1.2000000476837158,
+        "Idle": 2.0,
+        "IntoBattle": 1.899999976158142,
+        "MaxSkill01_End": 1.5333333015441895,
+        "MaxSkill01_Loop": 1.3333332538604736,
+        "MaxSkill01_Start": 1.1666666269302368,
+        "Release": 1.8666666746139526,
+        "Run": 0.800000011920929,
+        "Skill01": 2.4000000953674316,
+        "StarUp": 1.8333333730697632,
+        "Stun": 2.0
+    }
+}

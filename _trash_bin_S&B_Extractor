@@ -1,0 +1,39 @@
+# Nair / Resurgent Setti (20790) & Nair (20050) File Mapping
+
+This document maps the 27 requested file paths to their likely in-game skill terms, based on data value correlation and file naming conventions.
+
+| # | File Path / Name | Corresponding In-Game Term / Skill | Key Values Found |
+| :--- | :--- | :--- | :--- |
+| 1 | `20790_C_Nair_Final_MaxSkill01.unity3d` | **Stellar Wrath** (Ultimate) / **Stellar Legacy** (Effect) | `25.0`, `10.0`, `35.0` (Buffs), `40.0` (Crit) |
+| 2 | `20790_C_Nair_Final_Skill01.unity3d` | **Meteor Flux** (Active) / **Soaring Wind** (Effect) | `5.0` (Trig), `25.0`, `10.0`, `35.0` |
+| 3 | `20790_C_Nair_Final_Passive.unity3d` | **Stellar Sanctuary** (Passive) | `2.5` (Likely 25% Multiplier) |
+| 4 | `20790_C_Nair_Final_Attack.unity3d` | **Sand Spear** (Basic Attack) | `25.0`, `10.0`, `35.0` (Shared Vars) |
+| 5 | `20790_C_Nair_Final_BreakLevelSkill_1.unity3d` | **Talent 1: Star Veil** (Unlock) | (Logic Unlock / No Stats) |
+| 6 | `20790_C_Nair_Final_BreakLevelSkill_2.unity3d` | **Talent 2: Stellar Blessing** (Unlock) | (Logic Unlock / No Stats) |
+| 7 | `20790_C_Nair_Final_BreakLevelSkill_3.unity3d` | **Talent 3: Meteor Flux** (Unlock) | (Logic Unlock / No Stats) |
+| 8 | `Bullet_20790_C_Nair_Final_Skill01.unity3d` | **Meteor Flux** (Projectile) | `135.0` (Speed/Distance) |
+| 9 | `Bullet_20790_C_Nair_Final_MaxSkill01.unity3d` | **Stellar Legacy** (Rain Projection) | `130.0` |
+| 10 | `Bullet_20790_C_Nair_Final_Attack.unity3d` | **Sand Spear** (Projectile) | `130.0` |
+| 11 | `20050_C_Nair_Skill01_Rogue.unity3d` | **Cycle of Rebirth** (Nair Skill) | `20.0` (CD?), `35.7` |
+| 12 | `20050_C_Nair_Hit.unity3d` | **Nair Hit Effect** | (VFX Logic) |
+| 13 | `Bullet_2_C_Nair_MaxSkill01_guanchuanjian2_ciliu` | **Piercing Arrow** (Projectile Var 2) | `130.0`, `48.3` |
+| 14 | `Bullet_2_C_Nair_MaxSkill01_guanchuanjian_ciliu` | **Piercing Arrow** (Projectile Var 1) | `130.0` |
+| 15 | `Bullet_2_Zhengshi_Nair_Attack.unity3d` | **Nair Basic Attack** (Projectile) | `130.0` |
+| 16 | `Bullet_2_Zhengshi_Nair_Attack02.unity3d` | **Nair Basic Attack 2** (Multi-shot) | `130.0` |
+| 17 | `Bullet_2_Zhengshi_Nair_Attack03.unity3d` | **Nair Basic Attack 3** (Final Shot) | `130.0` |
+| 18 | `Bullet_2_Zhengshi_Nair_Skill01.unity3d` | **Toxic Arrow** (Nair Skill) | `130.0` |
+| 19 | `Bullet_2_Zhengshi_Nair_MaxSkill01.unity3d` | **Bow of Pyre** (Nair Ult Arrow 1) | `130.0` |
+| 20 | `Bullet_2_Zhengshi_Nair_MaxSkill02.unity3d` | **Bow of Pyre** (Nair Ult Arrow 2) | `130.0` |
+| 21 | `Bullet_2_Zhengshi_Nair_MaxSkill01_Rogue.unity3d` | **Rogue Mode Ult** (Alt Version) | `130.0` |
+| 22 | `Bullet_2_Zhengshi_Nair_MaxSkill02_Rogue.unity3d` | **Rogue Mode Ult** (Alt Version) | `130.0` |
+| 23 | `Bullet_2_Zhengshi_Nair_MaxSkill03_Rogue.unity3d` | **Rogue Mode Ult** (Alt Version) | `130.0` |
+| 24 | `Bullet_2_Zhengshi_Nair_Attack_Rogue.unity3d` | **Rogue Mode Atk** | `130.0` |
+| 25 | `Bullet_2_Zhengshi_Nair_Skill01_Rogue.unity3d` | **Rogue Mode Skill** | `130.0` |
+| 26 | `20790_C_Nair_Final_MaxSkill01_Rogue.unity3d` | **Stellar Wrath** (Rogue Mode) | `25.0`, `10.0`, `40.0` (Shared Vars) |
+| 27 | `Bullet_20790_C_Nair_Final_MaxSkill01_Rogue.unity3d`| **Stellar Legacy** (Rogue Projectile) | `130.0` |
+
+### **Analysis of Terms**
+- **Zhengshi Nair**: Refers to the "Formal" or "Official" Nair, possibly highlighting the difference between the base version and the specific deployable version (20050).
+- **Rogue**: These files correspond to the "Eclipsed Glory" or "Roguelike" mode versions of skills (often modified or buffed).
+- **Guanchuanjian**: Phonetic Pinyin for "Piercing Arrow" (贯穿箭), matching Nair's skill usage.
+- **Ciliu**: Phonetic Pinyin for "Magnetic Flow" or "Secondary Stream"? (Likely internal vfx naming).
